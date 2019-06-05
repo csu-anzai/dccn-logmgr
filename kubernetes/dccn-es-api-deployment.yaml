@@ -1,0 +1,20 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dccn-es-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dccn-es-api
+  template:
+    metadata:
+      labels:
+        app: dccn-es-api
+    spec:
+      containers:
+        - name: dccn-es-api
+          image: 815280425737.dkr.ecr.us-west-2.amazonaws.com/dccn-es-api:feat
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 50001
