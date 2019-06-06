@@ -296,7 +296,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 			if err != nil {
 				source, _ := q.Source()
 				data, _ := json.Marshal(source)
-				glog.Errorf("failed to search after %v\n, query => %s, %v", err, data)
+				glog.Errorf("failed to search after %v\n, query => %s", err, data)
 				return &pb.LogPodResponse{ReqId: req_id, Code: int32(SearchAfterErrCode), Msg: SearchAfterErrCode.String()}, err
 			}
 			if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
