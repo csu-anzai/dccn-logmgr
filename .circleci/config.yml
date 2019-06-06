@@ -12,7 +12,13 @@ jobs:
           name: Install AWSCLI
           command: |
             curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-            unzip awscli-bundle.zip sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws - run: name: "Log in to AWS ECR" command: eval $(aws ecr get-login --no-include-email --region us-west-2) - run: name: Install Kops and Kubectl
+            unzip awscli-bundle.zip sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+      - run:
+          name: "Log in to AWS ECR"
+          command:
+            eval $(aws ecr get-login --no-include-email --region us-west-2)
+      - run:
+          name: Install Kops and Kubectl
           command: |
             wget -O kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
             chmod +x ./kops
