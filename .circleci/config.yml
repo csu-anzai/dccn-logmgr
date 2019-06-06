@@ -56,7 +56,10 @@ jobs:
 
             kubectl set image dccn-es-api=$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-es-api:${BRANCH_NAE}${DATE} --local -f kubernetes/dccn-es-api.yml -o yaml > kubernetes/dccn-es-api_patch.yml
             kubectl apply -f kubernetes/dccn-es-api_patch.yml
-            #if ! kubectl rollout status deploy/${deployment_arr[$i]} --watch=true --timeout=60s; then
-            #  echo "Deploy failed, roll back to previous version"
-            #  kubectl rollout undo deploy/${deployment_arr[$i]}
-            #fi
+            if ! kubectl rollout status deploy/dccn-es-api --watch=true --timeout=60s; then
+              echo "Deploy failed, roll back to previous version"
+              kubectl rollout undo deploy/dccn-es-api
+            fi
+            kubectl get deployment -n logging
+            kubectl get svc -n logging
+            kubectl get pods -n logging
