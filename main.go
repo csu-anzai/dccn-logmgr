@@ -22,7 +22,7 @@ func init() {
 }
 
 func main() {
-	fmt.Println("++++++++  dccn-es-api start  +++++++++++++")
+	log.Println("++++++++  dccn-es-api start  +++++++++++++")
 	lis, err := net.Listen("tcp", PORT)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
