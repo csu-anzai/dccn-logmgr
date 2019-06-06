@@ -158,6 +158,10 @@ func NewEsMgrHandler(options ...HandlerOptionFunc) (*EsMgrHandler, error) {
 	return es, nil
 }
 
+func (s *EsMgrHandler) Ping() bool {
+	return s.ok()
+}
+
 func (s *EsMgrHandler) ok() bool {
 	ctx := context.Background()
 	info, code, err := s.client.Ping(s.url).Do(ctx)
