@@ -117,14 +117,14 @@ func SetURL(url string) HandlerOptionFunc {
 	}
 }
 
-func handleSearchResult(result elastic.SearchResult, typ reflect.Type) []*pb.LogEntry {
+func handleSearchResult(result *elastic.SearchResult, typ reflect.Type) []*pb.LogEntry {
 	log_entrys := make([]*pb.LogEntry, 0, len(result.Hits.Hits))
 	podID_Map := make(map[string]*pb.LogEntry)
 	for _, item := range result.Each(typ) {
 		if l, ok := item.(RawLogEntry); ok {
 			log_entry := new(pb.LogEntry)
 			var exist bool
-			if log_entry, exist = podID_Map[l.Kubernetes.PodID]; !exist{
+			if log_entry, exist = podID_Map[l.Kubernetes.PodID]; !exist {
 				log_entry = &pb.LogEntry{
 					MetaData: &pb.LogMetaData{
 						PodId:         l.Kubernetes.PodID,
@@ -132,7 +132,7 @@ func handleSearchResult(result elastic.SearchResult, typ reflect.Type) []*pb.Log
 						NamespaceId:   l.Kubernetes.NamespaceID,
 						NamespaceName: l.Kubernetes.NamespaceName,
 					},
-					LogItems: make([]*pb.LogItem,0),
+					LogItems: make([]*pb.LogItem, 0),
 				}
 				podID_Map[l.Kubernetes.PodID] = log_entry
 			} else {
@@ -181,7 +181,7 @@ func (s *EsMgrHandler) getTotalHitsCount(ctx context.Context, q elastic.Query) i
 func (s *EsMgrHandler) ListLogByAppName(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
 	req_id := ctx.Value(CTX_REQID).(string)
 	if !s.ok() {
-		return &pb.LogAppResponse{ReqId: req_id, Code: InternalErrCode, Msg: InternalErrCode.String()}, ErrPingFailed
+		return &pb.LogAppResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
 
 	start_time := time.Unix(int64(req.StartTime), 0).Format("2006-01-02 03:04:05")
@@ -204,7 +204,7 @@ func (s *EsMgrHandler) ListLogByAppName(ctx context.Context, req *pb.LogAppReque
 		last_sort   interface{}
 		ttyp        RawLogEntry
 	)
-	last_sort = end_time * 1000 //ms
+	last_sort = req.EndTime * 1000 //ms
 	if count > 0 {
 		podID_Map := make(map[string]*pb.LogEntry)
 		for cnt_handled < count && cnt_handled < TEST_COUNT {
@@ -216,9 +216,10 @@ func (s *EsMgrHandler) ListLogByAppName(ctx context.Context, req *pb.LogAppReque
 				Pretty(true).
 				Do(ctx)
 			if err != nil {
-				data, _ := json.Marshal(q.Source())
+				source, _ := q.Source()
+				data, _ := json.Marshal(source)
 				glog.Errorf("failed to search after \n, query => %s, %v", data, err)
-				return &pb.LogAppResponse{ReqId:req_id, Code: SearchAfterErrCode, Msg: SearchAfterErrCode.String()}
+				return &pb.LogAppResponse{ReqId: req_id, Code: int32(SearchAfterErrCode), Msg: SearchAfterErrCode.String()}, err
 			}
 			if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
 				last_sort = searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort[0]
@@ -226,16 +227,16 @@ func (s *EsMgrHandler) ListLogByAppName(ctx context.Context, req *pb.LogAppReque
 			logEntrys := handleSearchResult(searchResult, reflect.TypeOf(ttyp))
 			//merge log entry
 			for i, entry := range logEntrys {
-				if _, exists := podID_Map[entry.MetaData.PodId]; !exists{
+				if _, exists := podID_Map[entry.MetaData.PodId]; !exists {
 					podID_Map[entry.MetaData.PodId] = logEntrys[i]
-				}else {
+				} else {
 					if podID_Map[entry.MetaData.PodId].LogItems == nil {
 						podID_Map[entry.MetaData.PodId].LogItems = make([]*pb.LogItem, 0, len(entry.LogItems))
 					}
 					podID_Map[entry.MetaData.PodId].LogItems = append(podID_Map[entry.MetaData.PodId].LogItems, entry.LogItems...)
 				}
 			}
-			cnt_handled = cnt_handled + len(searchResult.Hits.Hits)
+			cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
 		}
 		for k, _ := range podID_Map {
 			resp.LogDetails = append(resp.LogDetails, podID_Map[k])
@@ -259,10 +260,12 @@ type LogPodRequest struct {
 func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
 	req_id := ctx.Value(CTX_REQID).(string)
 	if !s.ok() {
-		return &pb.LogAppResponse{ReqId: req_id, Code: InternalErrCode, Msg: InternalErrCode.String()}, ErrPingFailed
+		return &pb.LogPodResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
 	start_time := time.Unix(int64(req.StartTime), 0).Format("2006-01-02 03:04:05")
 	end_time := time.Unix(int64(req.EndTime), 0).Format("2006-01-02 03:04:05")
+
+	glog.V(3).Infof("start_time: %s, end_time: %s", start_time, end_time)
 
 	q := elastic.NewBoolQuery().Must(elastic.NewTermQuery(TERM_POD, req.PodName),
 		elastic.NewRangeQuery(RANGE_FIELD).Gte(start_time).Lte(end_time).Format(TIME_FORMAT).TimeZone(TIME_ZONE))
@@ -273,14 +276,14 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 	count := s.getTotalHitsCount(ctx, q)
 	resp := &pb.LogPodResponse{
 		ReqId: req_id,
-		Code: 0,
+		Code:  0,
 	}
 	var (
 		cnt_handled int64
 		last_sort   interface{}
 		ttyp        RawLogEntry
 	)
-	last_sort = end_time * 1000 //ms
+	last_sort = req.EndTime * 1000 //ms
 	if count > 0 {
 		for cnt_handled < count {
 			searchResult, err := s.client.Search().
@@ -291,9 +294,10 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 				Pretty(true).
 				Do(ctx)
 			if err != nil {
-				data, _ := json.Marshal(q.Source())
+				source, _ := q.Source()
+				data, _ := json.Marshal(source)
 				glog.Errorf("failed to search after %v\n, query => %s, %v", err, data)
-				return &pb.LogPodResponse{ReqId:req_id, Code: SearchAfterErrCode, Msg: SearchAfterErrCode.String()}
+				return &pb.LogPodResponse{ReqId: req_id, Code: int32(SearchAfterErrCode), Msg: SearchAfterErrCode.String()}, err
 			}
 			if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
 				last_sort = searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort[0]
@@ -303,7 +307,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 				resp.LogDetails = logEntrys[0]
 
 			}
-			cnt_handled = cnt_handled + len(searchResult.Hits.Hits)
+			cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
 		}
 	}
 	return resp, nil

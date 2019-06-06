@@ -1,5 +1,5 @@
 # Compile
-FRO golang:1.12-alpine AS compiler
+FROM golang:1.12-alpine AS compiler
 
 RUN apk add --no-cache git
 
@@ -11,9 +11,9 @@ RUN CGO_ENABLED=0 go vet ./...
 RUN CGO_ENABLED=0 go build -v 
 
 # Build image, alpine provides more possibilities than scratch
-FRO alpine
+FROM alpine
 
 COPY --from=compiler /dccn-es-api/dccn-es-api /dccn-es-api
 RUN ln -s /dccn-es-api /usr/local/bin/dccn-es-api
 
-CD ["dccn-es-api"]
+CMD ["dccn-es-api"]
