@@ -32,7 +32,7 @@ jobs:
             set -x
             BRANCH_NAE=$(git rev-parse --abbrev-ref HEAD)
             SHA1_SHORT=$(git rev-parse --short HEAD)
-            DATE=`date +%Y%m%d%H%%S`
+            DATE=`date +%Y%m%d%H%M%S`
             if [[ ($BRANCH_NAE == "develop") ]]
             then
               BRANCH_NAE="dev"
