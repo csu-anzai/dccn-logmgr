@@ -12,13 +12,7 @@ jobs:
           name: Install AWSCLI
           command: |
             curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-            unzip awscli-bundle.zip
-            sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-      - run:
-          name: "Log in to AWS ECR"
-          command: eval $(aws ecr get-login --no-include-email --region us-west-2)
-      - run:
-          name: Install Kops and Kubectl
+            unzip awscli-bundle.zip sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws - run: name: "Log in to AWS ECR" command: eval $(aws ecr get-login --no-include-email --region us-west-2) - run: name: Install Kops and Kubectl
           command: |
             wget -O kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
             chmod +x ./kops
@@ -51,6 +45,8 @@ jobs:
               docker push $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-es-api:$TAG
             done
             kops export kubecfg --name ${K8S_CLUSTER}.k8s.ankr.network --state s3://kops.${K8S_CLUSTER}.config
+            kubectl apply -f kubernetes/dccn-es-api-svc.yml
+
             kubectl set image dccn-es-api=$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-es-api:${BRANCH_NAE}${DATE} --local -f kubernetes/dccn-es-api.yml -o yaml > kubernetes/dccn-es-api_patch.yml
             kubectl apply -f kubernetes/dccn-es-api_patch.yml
             #if ! kubectl rollout status deploy/${deployment_arr[$i]} --watch=true --timeout=60s; then
