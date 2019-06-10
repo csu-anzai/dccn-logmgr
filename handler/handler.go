@@ -10,6 +10,7 @@ import (
 	pb "github.com/Ankr-network/dccn-es-api/proto/esmgr"
 	"github.com/golang/glog"
 	"github.com/olivere/elastic"
+	"google.golang.org/grpc/metadata"
 )
 
 /*
@@ -221,9 +222,10 @@ func (s *EsMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
 
 /////
 func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCountRequest) (*pb.LogAppCountResponse, error) {
-	req_id, ok := ctx.Value(CTX_REQID).(string)
-	if !ok {
-		req_id = "Unknown"
+	req_id := "Unknown"
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if ok {
+		req_id = md[CTX_REQID][0]
 	}
 	if !s.ok() {
 		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
@@ -238,9 +240,10 @@ func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCou
 }
 
 func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
-	req_id, ok := ctx.Value(CTX_REQID).(string)
-	if !ok {
-		req_id = "Unknown"
+	req_id := "Unknown"
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if ok {
+		req_id = md[CTX_REQID][0]
 	}
 	if !s.ok() {
 		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
@@ -255,9 +258,10 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 }
 
 func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
-	req_id, ok := ctx.Value(CTX_REQID).(string)
-	if !ok {
-		req_id = "Unknown"
+	req_id := "Unknown"
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if ok {
+		req_id = md[CTX_REQID][0]
 	}
 	if req != nil && req.IsTest {
 		return &pb.LogAppResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
@@ -357,9 +361,10 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 }
 
 func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
-	req_id, ok := ctx.Value(CTX_REQID).(string)
-	if !ok {
-		req_id = "Unknown"
+	req_id := "Unknown"
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if ok {
+		req_id = md[CTX_REQID][0]
 	}
 	if req != nil && req.IsTest {
 		return &pb.LogPodResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
