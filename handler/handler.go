@@ -250,6 +250,9 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 
 func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
 	req_id := ctx.Value(CTX_REQID).(string)
+	if !ok {
+		req_id = "Unknown"
+	}
 	if req != nil && req.IsTest {
 		return &pb.LogAppResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
 	}
@@ -348,7 +351,10 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 }
 
 func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
-	req_id := ctx.Value(CTX_REQID).(string)
+	req_id, ok := ctx.Value(CTX_REQID).(string)
+	if !ok {
+		req_id = "Unknown"
+	}
 	if req != nil && req.IsTest {
 		return &pb.LogPodResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
 	}
