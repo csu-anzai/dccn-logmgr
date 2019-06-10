@@ -8,10 +8,10 @@ service EsMgr {
 }
 
 message LogMetaData {
-   string pod_name = 1;
-   string pod_id = 2;
-   string namespace_name = 3;
-   string namespace_id = 4;
+    string pod_name = 1;
+    string pod_id = 2;
+    string namespace_name = 3;
+    string namespace_id = 4;
 }
 
 message LogItem {
@@ -20,16 +20,18 @@ message LogItem {
 }
 
 message LogEntry {
-   LogMetaData meta_data = 1;
-   repeated LogItem log_items = 2;
+    LogMetaData meta_data = 1;
+    repeated LogItem log_items = 2;
 }
 
 message LogAppRequest {
 	string req_id = 1;
-	string app_name = 2;
+	string app_id = 2;
 	repeated string keywords = 3;
 	uint64 start_time = 4;
 	uint64 end_time = 5;
+    uint32 from = 6;  //start position
+    uint32 size = 7;  //max 1000
 }
 
 message LogAppResponse {
@@ -40,16 +42,18 @@ message LogAppResponse {
 }
 
 message LogPodRequest {
-   string req_id = 1;
-   string pod_name = 2;
-   repeated string keywords = 3;
-   uint64 start_time = 4;
-   uint64 end_time = 5;
+    string req_id = 1;
+    string pod_name = 2;
+    repeated string keywords = 3;
+    uint64 start_time = 4;
+    uint64 end_time = 5;
+    uint32 from = 6;
+    uint32 size = 7;
 }
 
 message LogPodResponse {
-   string req_id = 1;
-   int32  code = 2;
-   string msg = 3;
-   LogEntry log_details = 4;
+    string req_id = 1;
+    int32  code = 2;
+    string msg = 3;
+    LogEntry log_details = 4;
 }
