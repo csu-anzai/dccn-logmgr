@@ -221,7 +221,10 @@ func (s *EsMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
 
 /////
 func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCountRequest) (*pb.LogAppCountResponse, error) {
-	req_id := ctx.Value(CTX_REQID).(string)
+	req_id, ok := ctx.Value(CTX_REQID).(string)
+	if !ok {
+		req_id = "Unknown"
+	}
 	if !s.ok() {
 		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
@@ -235,7 +238,10 @@ func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCou
 }
 
 func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
-	req_id := ctx.Value(CTX_REQID).(string)
+	req_id, ok := ctx.Value(CTX_REQID).(string)
+	if !ok {
+		req_id = "Unknown"
+	}
 	if !s.ok() {
 		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
@@ -249,7 +255,7 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 }
 
 func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
-	req_id := ctx.Value(CTX_REQID).(string)
+	req_id, ok := ctx.Value(CTX_REQID).(string)
 	if !ok {
 		req_id = "Unknown"
 	}
