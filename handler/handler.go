@@ -204,6 +204,11 @@ func (s *EsMgrHandler) buildQuery(ctx context.Context, req interface{}) elastic.
 	q := elastic.NewBoolQuery().Must(elastic.NewTermQuery(term_key, term_value),
 		elastic.NewRangeQuery(RANGE_FIELD).Gte(start_time).Lte(end_time).Format(TIME_FORMAT).TimeZone(TIME_ZONE))
 	s.query = q
+
+	source, err := q.Source()
+	glog.Infof("build query(err): %v", err)
+	data, _ := json.Marshal(source)
+	glog.Infof("build query(data): %s", data)
 	return q
 }
 
