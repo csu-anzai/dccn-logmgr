@@ -3,3 +3,5 @@ dccn-es-api
 vendor
 *.swp
 listLogByPodName.go
+
+Makefile

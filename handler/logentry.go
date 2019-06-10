@@ -54,6 +54,7 @@ type RawLogEntry struct {
 		PodID   string `json:"pod_id"`
 		Labels  struct {
 			App             string `json:"app"`
+			AnkrAppId       string `json:"ankr_app_id"`
 			PodTemplateHash string `json:"pod-template-hash"`
 		} `json:"labels"`
 		Host      string `json:"host"`

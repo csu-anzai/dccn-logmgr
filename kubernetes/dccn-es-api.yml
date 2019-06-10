@@ -2,7 +2,7 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: dccn-es-api
-  namespace: logging
+  #namespace: logging
 spec:
   replicas: 1
   selector:

@@ -32,7 +32,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create es client, %v", err)
 	}
-	server.Ping()
 	pb.RegisterEsMgrServer(s, server)
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {

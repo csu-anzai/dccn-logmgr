@@ -181,10 +181,14 @@ func (m *LogEntry) GetLogItems() []*LogItem {
 
 type LogAppRequest struct {
 	ReqId                string   `protobuf:"bytes,1,opt,name=req_id,json=reqId,proto3" json:"req_id,omitempty"`
-	AppName              string   `protobuf:"bytes,2,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
+	AppId                string   `protobuf:"bytes,2,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
 	Keywords             []string `protobuf:"bytes,3,rep,name=keywords,proto3" json:"keywords,omitempty"`
 	StartTime            uint64   `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 	EndTime              uint64   `protobuf:"varint,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	SearchAfter          uint64   `protobuf:"varint,6,opt,name=search_after,json=searchAfter,proto3" json:"search_after,omitempty"`
+	Size                 uint32   `protobuf:"varint,7,opt,name=size,proto3" json:"size,omitempty"`
+	Sort                 string   `protobuf:"bytes,8,opt,name=sort,proto3" json:"sort,omitempty"`
+	IsTest               bool     `protobuf:"varint,9,opt,name=is_test,json=isTest,proto3" json:"is_test,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -222,9 +226,9 @@ func (m *LogAppRequest) GetReqId() string {
 	return ""
 }
 
-func (m *LogAppRequest) GetAppName() string {
+func (m *LogAppRequest) GetAppId() string {
 	if m != nil {
-		return m.AppName
+		return m.AppId
 	}
 	return ""
 }
@@ -250,11 +254,41 @@ func (m *LogAppRequest) GetEndTime() uint64 {
 	return 0
 }
 
+func (m *LogAppRequest) GetSearchAfter() uint64 {
+	if m != nil {
+		return m.SearchAfter
+	}
+	return 0
+}
+
+func (m *LogAppRequest) GetSize() uint32 {
+	if m != nil {
+		return m.Size
+	}
+	return 0
+}
+
+func (m *LogAppRequest) GetSort() string {
+	if m != nil {
+		return m.Sort
+	}
+	return ""
+}
+
+func (m *LogAppRequest) GetIsTest() bool {
+	if m != nil {
+		return m.IsTest
+	}
+	return false
+}
+
 type LogAppResponse struct {
 	ReqId                string      `protobuf:"bytes,1,opt,name=req_id,json=reqId,proto3" json:"req_id,omitempty"`
 	Code                 int32       `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
 	Msg                  string      `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
-	LogDetails           []*LogEntry `protobuf:"bytes,4,rep,name=log_details,json=logDetails,proto3" json:"log_details,omitempty"`
+	TotalCount           uint64      `protobuf:"varint,4,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	LastSearchEnd        uint64      `protobuf:"varint,5,opt,name=last_search_end,json=lastSearchEnd,proto3" json:"last_search_end,omitempty"`
+	LogDetails           []*LogEntry `protobuf:"bytes,6,rep,name=log_details,json=logDetails,proto3" json:"log_details,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -306,11 +340,159 @@ func (m *LogAppResponse) GetMsg() string {
 	return ""
 }
 
+func (m *LogAppResponse) GetTotalCount() uint64 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *LogAppResponse) GetLastSearchEnd() uint64 {
+	if m != nil {
+		return m.LastSearchEnd
+	}
+	return 0
+}
+
 func (m *LogAppResponse) GetLogDetails() []*LogEntry {
 	if m != nil {
 		return m.LogDetails
 	}
 	return nil
+}
+
+type LogAppCountRequest struct {
+	ReqId                string   `protobuf:"bytes,1,opt,name=req_id,json=reqId,proto3" json:"req_id,omitempty"`
+	AppId                string   `protobuf:"bytes,2,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
+	Keywords             []string `protobuf:"bytes,3,rep,name=keywords,proto3" json:"keywords,omitempty"`
+	StartTime            uint64   `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime              uint64   `protobuf:"varint,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LogAppCountRequest) Reset()         { *m = LogAppCountRequest{} }
+func (m *LogAppCountRequest) String() string { return proto.CompactTextString(m) }
+func (*LogAppCountRequest) ProtoMessage()    {}
+func (*LogAppCountRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dc1047fedaf8d4aa, []int{5}
+}
+
+func (m *LogAppCountRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LogAppCountRequest.Unmarshal(m, b)
+}
+func (m *LogAppCountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LogAppCountRequest.Marshal(b, m, deterministic)
+}
+func (m *LogAppCountRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LogAppCountRequest.Merge(m, src)
+}
+func (m *LogAppCountRequest) XXX_Size() int {
+	return xxx_messageInfo_LogAppCountRequest.Size(m)
+}
+func (m *LogAppCountRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_LogAppCountRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LogAppCountRequest proto.InternalMessageInfo
+
+func (m *LogAppCountRequest) GetReqId() string {
+	if m != nil {
+		return m.ReqId
+	}
+	return ""
+}
+
+func (m *LogAppCountRequest) GetAppId() string {
+	if m != nil {
+		return m.AppId
+	}
+	return ""
+}
+
+func (m *LogAppCountRequest) GetKeywords() []string {
+	if m != nil {
+		return m.Keywords
+	}
+	return nil
+}
+
+func (m *LogAppCountRequest) GetStartTime() uint64 {
+	if m != nil {
+		return m.StartTime
+	}
+	return 0
+}
+
+func (m *LogAppCountRequest) GetEndTime() uint64 {
+	if m != nil {
+		return m.EndTime
+	}
+	return 0
+}
+
+type LogAppCountResponse struct {
+	ReqId                string   `protobuf:"bytes,1,opt,name=req_id,json=reqId,proto3" json:"req_id,omitempty"`
+	Code                 int32    `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
+	Msg                  string   `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
+	Count                uint64   `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LogAppCountResponse) Reset()         { *m = LogAppCountResponse{} }
+func (m *LogAppCountResponse) String() string { return proto.CompactTextString(m) }
+func (*LogAppCountResponse) ProtoMessage()    {}
+func (*LogAppCountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dc1047fedaf8d4aa, []int{6}
+}
+
+func (m *LogAppCountResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LogAppCountResponse.Unmarshal(m, b)
+}
+func (m *LogAppCountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LogAppCountResponse.Marshal(b, m, deterministic)
+}
+func (m *LogAppCountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LogAppCountResponse.Merge(m, src)
+}
+func (m *LogAppCountResponse) XXX_Size() int {
+	return xxx_messageInfo_LogAppCountResponse.Size(m)
+}
+func (m *LogAppCountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_LogAppCountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LogAppCountResponse proto.InternalMessageInfo
+
+func (m *LogAppCountResponse) GetReqId() string {
+	if m != nil {
+		return m.ReqId
+	}
+	return ""
+}
+
+func (m *LogAppCountResponse) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *LogAppCountResponse) GetMsg() string {
+	if m != nil {
+		return m.Msg
+	}
+	return ""
+}
+
+func (m *LogAppCountResponse) GetCount() uint64 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
 }
 
 type LogPodRequest struct {
@@ -319,6 +501,10 @@ type LogPodRequest struct {
 	Keywords             []string `protobuf:"bytes,3,rep,name=keywords,proto3" json:"keywords,omitempty"`
 	StartTime            uint64   `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 	EndTime              uint64   `protobuf:"varint,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	SearchAfter          uint64   `protobuf:"varint,6,opt,name=search_after,json=searchAfter,proto3" json:"search_after,omitempty"`
+	Size                 uint32   `protobuf:"varint,7,opt,name=size,proto3" json:"size,omitempty"`
+	Sort                 string   `protobuf:"bytes,8,opt,name=sort,proto3" json:"sort,omitempty"`
+	IsTest               bool     `protobuf:"varint,9,opt,name=is_test,json=isTest,proto3" json:"is_test,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -328,7 +514,7 @@ func (m *LogPodRequest) Reset()         { *m = LogPodRequest{} }
 func (m *LogPodRequest) String() string { return proto.CompactTextString(m) }
 func (*LogPodRequest) ProtoMessage()    {}
 func (*LogPodRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc1047fedaf8d4aa, []int{5}
+	return fileDescriptor_dc1047fedaf8d4aa, []int{7}
 }
 
 func (m *LogPodRequest) XXX_Unmarshal(b []byte) error {
@@ -384,11 +570,41 @@ func (m *LogPodRequest) GetEndTime() uint64 {
 	return 0
 }
 
+func (m *LogPodRequest) GetSearchAfter() uint64 {
+	if m != nil {
+		return m.SearchAfter
+	}
+	return 0
+}
+
+func (m *LogPodRequest) GetSize() uint32 {
+	if m != nil {
+		return m.Size
+	}
+	return 0
+}
+
+func (m *LogPodRequest) GetSort() string {
+	if m != nil {
+		return m.Sort
+	}
+	return ""
+}
+
+func (m *LogPodRequest) GetIsTest() bool {
+	if m != nil {
+		return m.IsTest
+	}
+	return false
+}
+
 type LogPodResponse struct {
 	ReqId                string    `protobuf:"bytes,1,opt,name=req_id,json=reqId,proto3" json:"req_id,omitempty"`
 	Code                 int32     `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
 	Msg                  string    `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
-	LogDetails           *LogEntry `protobuf:"bytes,4,opt,name=log_details,json=logDetails,proto3" json:"log_details,omitempty"`
+	TotalCount           uint64    `protobuf:"varint,4,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	LastSearchEnd        uint64    `protobuf:"varint,5,opt,name=last_search_end,json=lastSearchEnd,proto3" json:"last_search_end,omitempty"`
+	LogDetails           *LogEntry `protobuf:"bytes,6,opt,name=log_details,json=logDetails,proto3" json:"log_details,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
 	XXX_unrecognized     []byte    `json:"-"`
 	XXX_sizecache        int32     `json:"-"`
@@ -398,7 +614,7 @@ func (m *LogPodResponse) Reset()         { *m = LogPodResponse{} }
 func (m *LogPodResponse) String() string { return proto.CompactTextString(m) }
 func (*LogPodResponse) ProtoMessage()    {}
 func (*LogPodResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc1047fedaf8d4aa, []int{6}
+	return fileDescriptor_dc1047fedaf8d4aa, []int{8}
 }
 
 func (m *LogPodResponse) XXX_Unmarshal(b []byte) error {
@@ -440,11 +656,159 @@ func (m *LogPodResponse) GetMsg() string {
 	return ""
 }
 
+func (m *LogPodResponse) GetTotalCount() uint64 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *LogPodResponse) GetLastSearchEnd() uint64 {
+	if m != nil {
+		return m.LastSearchEnd
+	}
+	return 0
+}
+
 func (m *LogPodResponse) GetLogDetails() *LogEntry {
 	if m != nil {
 		return m.LogDetails
 	}
 	return nil
+}
+
+type LogPodCountRequest struct {
+	ReqId                string   `protobuf:"bytes,1,opt,name=req_id,json=reqId,proto3" json:"req_id,omitempty"`
+	PodName              string   `protobuf:"bytes,2,opt,name=pod_name,json=podName,proto3" json:"pod_name,omitempty"`
+	Keywords             []string `protobuf:"bytes,3,rep,name=keywords,proto3" json:"keywords,omitempty"`
+	StartTime            uint64   `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime              uint64   `protobuf:"varint,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LogPodCountRequest) Reset()         { *m = LogPodCountRequest{} }
+func (m *LogPodCountRequest) String() string { return proto.CompactTextString(m) }
+func (*LogPodCountRequest) ProtoMessage()    {}
+func (*LogPodCountRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dc1047fedaf8d4aa, []int{9}
+}
+
+func (m *LogPodCountRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LogPodCountRequest.Unmarshal(m, b)
+}
+func (m *LogPodCountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LogPodCountRequest.Marshal(b, m, deterministic)
+}
+func (m *LogPodCountRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LogPodCountRequest.Merge(m, src)
+}
+func (m *LogPodCountRequest) XXX_Size() int {
+	return xxx_messageInfo_LogPodCountRequest.Size(m)
+}
+func (m *LogPodCountRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_LogPodCountRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LogPodCountRequest proto.InternalMessageInfo
+
+func (m *LogPodCountRequest) GetReqId() string {
+	if m != nil {
+		return m.ReqId
+	}
+	return ""
+}
+
+func (m *LogPodCountRequest) GetPodName() string {
+	if m != nil {
+		return m.PodName
+	}
+	return ""
+}
+
+func (m *LogPodCountRequest) GetKeywords() []string {
+	if m != nil {
+		return m.Keywords
+	}
+	return nil
+}
+
+func (m *LogPodCountRequest) GetStartTime() uint64 {
+	if m != nil {
+		return m.StartTime
+	}
+	return 0
+}
+
+func (m *LogPodCountRequest) GetEndTime() uint64 {
+	if m != nil {
+		return m.EndTime
+	}
+	return 0
+}
+
+type LogPodCountResponse struct {
+	ReqId                string   `protobuf:"bytes,1,opt,name=req_id,json=reqId,proto3" json:"req_id,omitempty"`
+	Code                 int32    `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
+	Msg                  string   `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
+	Count                uint64   `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LogPodCountResponse) Reset()         { *m = LogPodCountResponse{} }
+func (m *LogPodCountResponse) String() string { return proto.CompactTextString(m) }
+func (*LogPodCountResponse) ProtoMessage()    {}
+func (*LogPodCountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dc1047fedaf8d4aa, []int{10}
+}
+
+func (m *LogPodCountResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LogPodCountResponse.Unmarshal(m, b)
+}
+func (m *LogPodCountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LogPodCountResponse.Marshal(b, m, deterministic)
+}
+func (m *LogPodCountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LogPodCountResponse.Merge(m, src)
+}
+func (m *LogPodCountResponse) XXX_Size() int {
+	return xxx_messageInfo_LogPodCountResponse.Size(m)
+}
+func (m *LogPodCountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_LogPodCountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LogPodCountResponse proto.InternalMessageInfo
+
+func (m *LogPodCountResponse) GetReqId() string {
+	if m != nil {
+		return m.ReqId
+	}
+	return ""
+}
+
+func (m *LogPodCountResponse) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *LogPodCountResponse) GetMsg() string {
+	if m != nil {
+		return m.Msg
+	}
+	return ""
+}
+
+func (m *LogPodCountResponse) GetCount() uint64 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
 }
 
 func init() {
@@ -453,43 +817,60 @@ func init() {
 	proto.RegisterType((*LogEntry)(nil), "esmgr.LogEntry")
 	proto.RegisterType((*LogAppRequest)(nil), "esmgr.LogAppRequest")
 	proto.RegisterType((*LogAppResponse)(nil), "esmgr.LogAppResponse")
+	proto.RegisterType((*LogAppCountRequest)(nil), "esmgr.LogAppCountRequest")
+	proto.RegisterType((*LogAppCountResponse)(nil), "esmgr.LogAppCountResponse")
 	proto.RegisterType((*LogPodRequest)(nil), "esmgr.LogPodRequest")
 	proto.RegisterType((*LogPodResponse)(nil), "esmgr.LogPodResponse")
+	proto.RegisterType((*LogPodCountRequest)(nil), "esmgr.LogPodCountRequest")
+	proto.RegisterType((*LogPodCountResponse)(nil), "esmgr.LogPodCountResponse")
 }
 
 func init() { proto.RegisterFile("esmgr.proto", fileDescriptor_dc1047fedaf8d4aa) }
 
 var fileDescriptor_dc1047fedaf8d4aa = []byte{
-	// 464 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x94, 0xc1, 0x8b, 0xd3, 0x40,
-	0x14, 0xc6, 0x37, 0x4d, 0xb3, 0x4d, 0x5e, 0xdc, 0xba, 0x0c, 0x2e, 0xc4, 0x45, 0xa1, 0x06, 0x84,
-	0x82, 0xb0, 0x4a, 0x3d, 0x79, 0xac, 0xec, 0x1e, 0x0a, 0x59, 0x59, 0x82, 0xf7, 0x32, 0xee, 0x3c,
-	0xc6, 0x60, 0x27, 0x33, 0x9d, 0x19, 0x91, 0x9e, 0x3c, 0x7b, 0xf0, 0xec, 0xbf, 0x2b, 0x33, 0xd3,
-	0x26, 0x59, 0x41, 0xf6, 0xd4, 0xdb, 0xe4, 0x7d, 0xef, 0x3d, 0xbe, 0xef, 0xc7, 0x23, 0x90, 0xa3,
-	0x11, 0x5c, 0x5f, 0x29, 0x2d, 0xad, 0x24, 0x89, 0xff, 0x28, 0x7f, 0x45, 0x90, 0x57, 0x92, 0xdf,
-	0xa2, 0xa5, 0xd7, 0xd4, 0x52, 0xf2, 0x1c, 0x52, 0x25, 0xd9, 0xba, 0xa5, 0x02, 0x8b, 0x68, 0x16,
-	0xcd, 0xb3, 0x7a, 0xa2, 0x24, 0xfb, 0x44, 0x05, 0x92, 0x0b, 0x38, 0x75, 0x52, 0xc3, 0x8a, 0x91,
-	0x17, 0x12, 0x25, 0xd9, 0x8a, 0x91, 0xd7, 0x30, 0x75, 0xdd, 0x46, 0xd1, 0x7b, 0x0c, 0x73, 0xb1,
-	0x97, 0xcf, 0xba, 0xaa, 0x9f, 0x7e, 0x05, 0x4f, 0xfa, 0xb6, 0x86, 0x15, 0x63, 0xdf, 0x94, 0x77,
-	0xb5, 0x15, 0x2b, 0x3f, 0xc0, 0xa4, 0x92, 0x7c, 0x65, 0x51, 0x90, 0x17, 0x90, 0xd9, 0x46, 0xa0,
-	0xb1, 0x54, 0xa8, 0xbd, 0x8f, 0xbe, 0x40, 0xce, 0x21, 0x16, 0x86, 0xef, 0x6d, 0xb8, 0x67, 0xf9,
-	0x15, 0xd2, 0x4a, 0xf2, 0x9b, 0xd6, 0xea, 0x1d, 0x79, 0x0b, 0x99, 0x40, 0x4b, 0xd7, 0x8c, 0x5a,
-	0xea, 0x67, 0xf3, 0x05, 0xb9, 0x0a, 0xd1, 0x07, 0x49, 0xeb, 0x54, 0x1c, 0x32, 0xbf, 0x81, 0x6c,
-	0x23, 0xf9, 0xba, 0xb1, 0x28, 0x4c, 0x31, 0x9a, 0xc5, 0xf3, 0x7c, 0x31, 0xed, 0x07, 0x9c, 0x9f,
-	0x3a, 0xdd, 0x84, 0x87, 0x29, 0xff, 0x44, 0x70, 0x56, 0x49, 0xbe, 0x54, 0xaa, 0xc6, 0xed, 0x77,
-	0x34, 0xd6, 0x71, 0xd1, 0xb8, 0x75, 0x99, 0x82, 0xd1, 0x44, 0xe3, 0x76, 0xc5, 0x1c, 0x49, 0xaa,
-	0x54, 0x20, 0x12, 0x9c, 0x4e, 0xa8, 0x52, 0x9e, 0xc5, 0x25, 0xa4, 0xdf, 0x70, 0xf7, 0x43, 0x6a,
-	0x66, 0x8a, 0x78, 0x16, 0xcf, 0xb3, 0xba, 0xfb, 0x26, 0x2f, 0x01, 0x8c, 0xa5, 0xda, 0xae, 0x5d,
-	0x5c, 0x4f, 0x69, 0x5c, 0x67, 0xbe, 0xf2, 0xb9, 0x11, 0xe8, 0xb6, 0x62, 0xcb, 0x82, 0x98, 0x78,
-	0x71, 0x82, 0x2d, 0x73, 0x52, 0xf9, 0x13, 0xa6, 0x07, 0x63, 0x46, 0xc9, 0xd6, 0xe0, 0xff, 0x9c,
-	0x11, 0x18, 0xdf, 0x4b, 0x16, 0x5c, 0x25, 0xb5, 0x7f, 0x1f, 0x90, 0xc6, 0x1d, 0x52, 0xf2, 0x0e,
-	0x72, 0x47, 0x85, 0xa1, 0xa5, 0xcd, 0xc6, 0x14, 0x63, 0xcf, 0xe5, 0x69, 0xcf, 0xc5, 0xc3, 0xae,
-	0x61, 0x23, 0xf9, 0x75, 0x68, 0x39, 0xa0, 0xb9, 0x93, 0xec, 0x71, 0x34, 0xdd, 0x91, 0x8d, 0x1e,
-	0x1e, 0xd9, 0x31, 0xd1, 0x78, 0x63, 0x47, 0x41, 0x13, 0x3d, 0x82, 0x66, 0xf1, 0x3b, 0x82, 0xe4,
-	0xc6, 0xdc, 0x72, 0x4d, 0x96, 0x70, 0x5e, 0x35, 0xc6, 0x56, 0x92, 0x7f, 0xdc, 0x2d, 0xf7, 0xf7,
-	0xf0, 0xac, 0x1f, 0xed, 0xef, 0xea, 0xf2, 0xe2, 0x9f, 0x6a, 0x70, 0x5e, 0x9e, 0x3c, 0x58, 0x71,
-	0xb7, 0xe7, 0x36, 0x58, 0xd1, 0xf3, 0x1f, 0xae, 0x18, 0x84, 0x2f, 0x4f, 0xbe, 0x9c, 0xfa, 0x9f,
-	0xc0, 0xfb, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x33, 0x68, 0xcf, 0xbf, 0x13, 0x04, 0x00, 0x00,
+	// 665 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xc1, 0x6e, 0xd3, 0x4c,
+	0x10, 0xae, 0x93, 0x38, 0xb1, 0xc7, 0x4d, 0x5a, 0xed, 0x9f, 0xea, 0x77, 0xab, 0xff, 0x17, 0xa9,
+	0x25, 0x50, 0x24, 0xa4, 0x82, 0xca, 0x89, 0x13, 0x0a, 0xb4, 0x42, 0x91, 0x52, 0xa8, 0x4c, 0xef,
+	0xd6, 0x92, 0x1d, 0x5c, 0x8b, 0xd8, 0xeb, 0x7a, 0xb7, 0x42, 0xe5, 0x0d, 0x78, 0x03, 0x0e, 0xbc,
+	0x01, 0x2f, 0xc2, 0x1b, 0x71, 0xe0, 0x82, 0x76, 0xec, 0x24, 0x4e, 0x54, 0x54, 0x0e, 0x80, 0xca,
+	0x6d, 0xf6, 0x9b, 0xdd, 0xd9, 0xef, 0x9b, 0xf9, 0xbc, 0x32, 0x78, 0xa8, 0xd2, 0xb8, 0x38, 0xc8,
+	0x0b, 0xa9, 0x25, 0xb3, 0x69, 0x11, 0x7c, 0xb0, 0xc0, 0x9b, 0xc8, 0xf8, 0x04, 0x35, 0x3f, 0xe2,
+	0x9a, 0xb3, 0x5d, 0x70, 0x72, 0x29, 0xa2, 0x8c, 0xa7, 0xe8, 0x5b, 0x03, 0x6b, 0xe8, 0x86, 0x9d,
+	0x5c, 0x8a, 0x17, 0x3c, 0x45, 0xb6, 0x03, 0x6d, 0x93, 0x4a, 0x84, 0xdf, 0xa0, 0x84, 0x9d, 0x4b,
+	0x31, 0x16, 0xec, 0x2e, 0xf4, 0xcc, 0x6e, 0x95, 0xf3, 0x29, 0x96, 0xe7, 0x9a, 0x94, 0xee, 0x2e,
+	0x50, 0x3a, 0xbd, 0x0f, 0x9b, 0xcb, 0x6d, 0x89, 0xf0, 0x5b, 0xb4, 0xc9, 0x5b, 0x60, 0x63, 0x11,
+	0x3c, 0x86, 0xce, 0x44, 0xc6, 0x63, 0x8d, 0x29, 0xfb, 0x0f, 0x5c, 0x9d, 0xa4, 0xa8, 0x34, 0x4f,
+	0xf3, 0x8a, 0xc7, 0x12, 0x60, 0xdb, 0xd0, 0x4c, 0x55, 0x5c, 0xd1, 0x30, 0x61, 0x70, 0x0e, 0xce,
+	0x44, 0xc6, 0xc7, 0x99, 0x2e, 0xae, 0xd8, 0x03, 0x70, 0x53, 0xd4, 0x3c, 0x12, 0x5c, 0x73, 0x3a,
+	0xeb, 0x1d, 0xb2, 0x83, 0x52, 0x7a, 0x4d, 0x69, 0xe8, 0xa4, 0x73, 0xcd, 0xf7, 0xc1, 0x9d, 0xc9,
+	0x38, 0x4a, 0x34, 0xa6, 0xca, 0x6f, 0x0c, 0x9a, 0x43, 0xef, 0xb0, 0xb7, 0x3c, 0x60, 0xf8, 0x84,
+	0xce, 0xac, 0x0c, 0x54, 0xf0, 0xd5, 0x82, 0xee, 0x44, 0xc6, 0xa3, 0x3c, 0x0f, 0xf1, 0xe2, 0x12,
+	0x95, 0x36, 0x7d, 0x29, 0xf0, 0xc2, 0x68, 0x2a, 0x89, 0xda, 0x05, 0x5e, 0x8c, 0x85, 0x81, 0x79,
+	0x9e, 0xd7, 0xda, 0xc5, 0xf3, 0x7c, 0x2c, 0xd8, 0x1e, 0x38, 0x6f, 0xf1, 0xea, 0x9d, 0x2c, 0x84,
+	0xf2, 0x9b, 0x83, 0xe6, 0xd0, 0x0d, 0x17, 0x6b, 0xf6, 0x3f, 0x80, 0xd2, 0xbc, 0xd0, 0x91, 0x91,
+	0x4a, 0x1d, 0x6a, 0x85, 0x2e, 0x21, 0x67, 0x49, 0x8a, 0x66, 0x36, 0x98, 0x89, 0x32, 0x69, 0x53,
+	0xb2, 0x83, 0x99, 0xa0, 0xd4, 0x3e, 0x6c, 0x2a, 0xe4, 0xc5, 0xf4, 0x3c, 0xe2, 0x6f, 0x34, 0x16,
+	0x7e, 0x9b, 0xd2, 0x5e, 0x89, 0x8d, 0x0c, 0xc4, 0x18, 0xb4, 0x54, 0xf2, 0x1e, 0xfd, 0xce, 0xc0,
+	0x1a, 0x76, 0x43, 0x8a, 0x09, 0x93, 0x85, 0xf6, 0x1d, 0x62, 0x48, 0x31, 0xfb, 0x17, 0x3a, 0x89,
+	0x8a, 0x34, 0x2a, 0xed, 0xbb, 0x03, 0x6b, 0xe8, 0x84, 0xed, 0x44, 0x9d, 0xa1, 0xd2, 0xc1, 0x17,
+	0x0b, 0x7a, 0x73, 0xe5, 0x2a, 0x97, 0x99, 0xc2, 0x1f, 0x49, 0x67, 0xd0, 0x9a, 0x4a, 0x81, 0x24,
+	0xdc, 0x0e, 0x29, 0x9e, 0xcf, 0xac, 0xb9, 0x98, 0x19, 0xbb, 0x03, 0x9e, 0x96, 0x9a, 0xcf, 0xa2,
+	0xa9, 0xbc, 0xcc, 0x74, 0x25, 0x17, 0x08, 0x7a, 0x66, 0x10, 0x76, 0x0f, 0xb6, 0x66, 0x5c, 0xe9,
+	0xa8, 0x52, 0x86, 0x99, 0xa8, 0x64, 0x77, 0x0d, 0xfc, 0x8a, 0xd0, 0xe3, 0x4c, 0xb0, 0x87, 0xe0,
+	0x99, 0xf9, 0x09, 0xd4, 0x3c, 0x99, 0x29, 0xbf, 0x4d, 0x13, 0xdc, 0x5a, 0x4e, 0x90, 0x6c, 0x11,
+	0xc2, 0x4c, 0xc6, 0x47, 0xe5, 0x96, 0xe0, 0xa3, 0x05, 0xac, 0x94, 0x42, 0x37, 0xdd, 0xa2, 0x49,
+	0x06, 0xe7, 0xf0, 0xcf, 0x0a, 0xb3, 0x5f, 0xd1, 0xe9, 0x3e, 0xd8, 0xf5, 0x1e, 0x97, 0x8b, 0xe0,
+	0x5b, 0xe9, 0xe4, 0x53, 0x29, 0x6e, 0xd0, 0x5f, 0x7f, 0x13, 0x1a, 0xab, 0x6f, 0xc2, 0x5f, 0xef,
+	0x66, 0x52, 0x7f, 0xbb, 0xdd, 0x6c, 0xdd, 0xe4, 0xe6, 0x4f, 0xa5, 0x9b, 0x4f, 0xa5, 0xf8, 0x19,
+	0x37, 0xff, 0xe9, 0x69, 0x56, 0x8e, 0x5e, 0xb2, 0xfb, 0x6d, 0x8e, 0x3e, 0xfc, 0xdc, 0x00, 0xfb,
+	0x58, 0x9d, 0xc4, 0x05, 0x3b, 0x01, 0xf6, 0x1c, 0xf5, 0x44, 0xc6, 0x74, 0xe7, 0xd3, 0xab, 0x11,
+	0x7d, 0xb1, 0xbb, 0xcb, 0x2e, 0xae, 0x7d, 0xfa, 0x7b, 0x7b, 0xd7, 0xa5, 0x4a, 0xa6, 0xc1, 0x06,
+	0x7b, 0x09, 0xfd, 0x95, 0x72, 0xa7, 0x55, 0xc3, 0x6a, 0x05, 0xd7, 0xba, 0x5f, 0x2f, 0xb8, 0x2e,
+	0x3d, 0xd8, 0x60, 0x4f, 0xa0, 0x37, 0x49, 0x94, 0xa9, 0x38, 0xe7, 0xd6, 0x5f, 0x21, 0x30, 0xaf,
+	0xb2, 0xb3, 0x86, 0x2e, 0x0a, 0x8c, 0x60, 0x7b, 0x51, 0x60, 0xce, 0xa6, 0xbf, 0x72, 0xe5, 0x35,
+	0x25, 0x6a, 0x66, 0x0f, 0x36, 0x5e, 0xb7, 0xe9, 0x47, 0xe0, 0xd1, 0xf7, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0x35, 0xad, 0x17, 0x97, 0x17, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -504,7 +885,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type EsMgrClient interface {
-	ListLogByAppName(ctx context.Context, in *LogAppRequest, opts ...grpc.CallOption) (*LogAppResponse, error)
+	GetLogCountByAppId(ctx context.Context, in *LogAppCountRequest, opts ...grpc.CallOption) (*LogAppCountResponse, error)
+	GetLogCountByPodName(ctx context.Context, in *LogPodCountRequest, opts ...grpc.CallOption) (*LogPodCountResponse, error)
+	ListLogByAppId(ctx context.Context, in *LogAppRequest, opts ...grpc.CallOption) (*LogAppResponse, error)
 	ListLogByPodName(ctx context.Context, in *LogPodRequest, opts ...grpc.CallOption) (*LogPodResponse, error)
 }
 
@@ -516,9 +899,27 @@ func NewEsMgrClient(cc *grpc.ClientConn) EsMgrClient {
 	return &esMgrClient{cc}
 }
 
-func (c *esMgrClient) ListLogByAppName(ctx context.Context, in *LogAppRequest, opts ...grpc.CallOption) (*LogAppResponse, error) {
+func (c *esMgrClient) GetLogCountByAppId(ctx context.Context, in *LogAppCountRequest, opts ...grpc.CallOption) (*LogAppCountResponse, error) {
+	out := new(LogAppCountResponse)
+	err := c.cc.Invoke(ctx, "/esmgr.EsMgr/GetLogCountByAppId", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *esMgrClient) GetLogCountByPodName(ctx context.Context, in *LogPodCountRequest, opts ...grpc.CallOption) (*LogPodCountResponse, error) {
+	out := new(LogPodCountResponse)
+	err := c.cc.Invoke(ctx, "/esmgr.EsMgr/GetLogCountByPodName", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *esMgrClient) ListLogByAppId(ctx context.Context, in *LogAppRequest, opts ...grpc.CallOption) (*LogAppResponse, error) {
 	out := new(LogAppResponse)
-	err := c.cc.Invoke(ctx, "/esmgr.EsMgr/ListLogByAppName", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/esmgr.EsMgr/ListLogByAppId", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +937,9 @@ func (c *esMgrClient) ListLogByPodName(ctx context.Context, in *LogPodRequest, o
 
 // EsMgrServer is the server API for EsMgr service.
 type EsMgrServer interface {
-	ListLogByAppName(context.Context, *LogAppRequest) (*LogAppResponse, error)
+	GetLogCountByAppId(context.Context, *LogAppCountRequest) (*LogAppCountResponse, error)
+	GetLogCountByPodName(context.Context, *LogPodCountRequest) (*LogPodCountResponse, error)
+	ListLogByAppId(context.Context, *LogAppRequest) (*LogAppResponse, error)
 	ListLogByPodName(context.Context, *LogPodRequest) (*LogPodResponse, error)
 }
 
@@ -544,20 +947,56 @@ func RegisterEsMgrServer(s *grpc.Server, srv EsMgrServer) {
 	s.RegisterService(&_EsMgr_serviceDesc, srv)
 }
 
-func _EsMgr_ListLogByAppName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EsMgr_GetLogCountByAppId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogAppCountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EsMgrServer).GetLogCountByAppId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/esmgr.EsMgr/GetLogCountByAppId",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EsMgrServer).GetLogCountByAppId(ctx, req.(*LogAppCountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EsMgr_GetLogCountByPodName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogPodCountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EsMgrServer).GetLogCountByPodName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/esmgr.EsMgr/GetLogCountByPodName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EsMgrServer).GetLogCountByPodName(ctx, req.(*LogPodCountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EsMgr_ListLogByAppId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LogAppRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EsMgrServer).ListLogByAppName(ctx, in)
+		return srv.(EsMgrServer).ListLogByAppId(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/esmgr.EsMgr/ListLogByAppName",
+		FullMethod: "/esmgr.EsMgr/ListLogByAppId",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EsMgrServer).ListLogByAppName(ctx, req.(*LogAppRequest))
+		return srv.(EsMgrServer).ListLogByAppId(ctx, req.(*LogAppRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -585,8 +1024,16 @@ var _EsMgr_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*EsMgrServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListLogByAppName",
-			Handler:    _EsMgr_ListLogByAppName_Handler,
+			MethodName: "GetLogCountByAppId",
+			Handler:    _EsMgr_GetLogCountByAppId_Handler,
+		},
+		{
+			MethodName: "GetLogCountByPodName",
+			Handler:    _EsMgr_GetLogCountByPodName_Handler,
+		},
+		{
+			MethodName: "ListLogByAppId",
+			Handler:    _EsMgr_ListLogByAppId_Handler,
 		},
 		{
 			MethodName: "ListLogByPodName",

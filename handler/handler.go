@@ -85,27 +85,26 @@ const (
 	ES_URL         = "http://elasticsearch:9200"
 	PER_FETCH_SIZE = 1000
 	CTX_REQID      = "ankr_req_id"
-	TERM_APP       = "kubernetes.labels.app"
-	TERM_POD       = "kubernetes.pod_name"
-	TIME_ZONE      = "+08:00"
-	TIME_FORMAT    = "yyyy-MM-dd HH:mm:ss"
-	RANGE_FIELD    = "@timestamp"
+	//TERM_APP       = "kubernetes.labels.ankr_app_id"
+	TERM_APP    = "kubernetes.labels.app"
+	TERM_POD    = "kubernetes.pod_name"
+	TIME_ZONE   = "+08:00"
+	TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
+	RANGE_FIELD = "@timestamp"
 
 	TEST_COUNT = 10
 )
 
-type Term struct {
-	Name  string
-	Value interface{}
-}
-
 var (
-	ErrPingFailed = errors.New("failed to ping es node")
+	ErrPingFailed  = errors.New("failed to ping es node")
+	ErrQueryNil    = errors.New("query is nil")
+	ErrCountFailed = errors.New("failed to get count")
 )
 
 type EsMgrHandler struct {
 	client *elastic.Client
 	url    string
+	query  elastic.Query
 }
 
 type HandlerOptionFunc func(*EsMgrHandler) error
@@ -169,65 +168,163 @@ func (s *EsMgrHandler) ok() bool {
 		glog.Errorf("failed to ping es node, %v", err)
 		return false
 	}
-	//TODO: DEBUG
 	glog.V(3).Infof("es returned with code %d and version %s", code, info.Version.Number)
 	return true
 }
 
-func (s *EsMgrHandler) getTotalHitsCount(ctx context.Context, q elastic.Query) int64 {
-	count, err := s.client.Count().Query(q).Pretty(true).Do(ctx)
-	if err != nil {
-		glog.Errorf("failed to get total hits count, %v", err)
+func (s *EsMgrHandler) buildQuery(ctx context.Context, req interface{}) elastic.Query {
+	var (
+		start_time, end_time string
+		term_key             string
+		term_value           interface{}
+	)
+	switch req.(type) {
+	case *pb.LogAppRequest:
+		start_time = time.Unix(int64(req.(*pb.LogAppRequest).StartTime), 0).Format("2006-01-02 03:04:05")
+		end_time = time.Unix(int64(req.(*pb.LogAppRequest).EndTime), 0).Format("2006-01-02 03:04:05")
+		term_key = TERM_APP
+		term_value = req.(*pb.LogAppRequest).AppId
+	case *pb.LogPodRequest:
+		start_time = time.Unix(int64(req.(*pb.LogPodRequest).StartTime), 0).Format("2006-01-02 03:04:05")
+		end_time = time.Unix(int64(req.(*pb.LogPodRequest).EndTime), 0).Format("2006-01-02 03:04:05")
+		term_key = TERM_POD
+		term_value = req.(*pb.LogPodRequest).PodName
+	case *pb.LogAppCountRequest:
+		start_time = time.Unix(int64(req.(*pb.LogAppCountRequest).StartTime), 0).Format("2006-01-02 03:04:05")
+		end_time = time.Unix(int64(req.(*pb.LogAppCountRequest).EndTime), 0).Format("2006-01-02 03:04:05")
+		term_key = TERM_APP
+		term_value = req.(*pb.LogAppCountRequest).AppId
+	case *pb.LogPodCountRequest:
+		start_time = time.Unix(int64(req.(*pb.LogPodCountRequest).StartTime), 0).Format("2006-01-02 03:04:05")
+		end_time = time.Unix(int64(req.(*pb.LogPodCountRequest).EndTime), 0).Format("2006-01-02 03:04:05")
+		term_key = TERM_POD
+		term_value = req.(*pb.LogPodCountRequest).PodName
 	}
-	return count
+	q := elastic.NewBoolQuery().Must(elastic.NewTermQuery(term_key, term_value),
+		elastic.NewRangeQuery(RANGE_FIELD).Gte(start_time).Lte(end_time).Format(TIME_FORMAT).TimeZone(TIME_ZONE))
+	s.query = q
+	return q
 }
 
-func (s *EsMgrHandler) ListLogByAppName(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
+func (s *EsMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
+	if s.query == nil {
+		glog.Errorf("query must not be nil")
+		return 0, ErrQueryNil
+	}
+	count, err := s.client.Count().Query(s.query).Pretty(true).Do(ctx)
+	if err != nil {
+		glog.Errorf("failed to get total hits count, %v", err)
+		return 0, ErrCountFailed
+	}
+	return count, nil
+}
+
+/////
+func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCountRequest) (*pb.LogAppCountResponse, error) {
 	req_id := ctx.Value(CTX_REQID).(string)
+	if !s.ok() {
+		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
+	}
+	s.buildQuery(ctx, req)
+	count, err := s.getTotalHitsCount(ctx)
+	if err != nil {
+		glog.Errorf("failed to get total count, %v", err)
+		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(CountErrCode), Msg: CountErrCode.String()}, err
+	}
+	return &pb.LogAppCountResponse{ReqId: req_id, Code: 0, Msg: "SUCCESS", Count: uint64(count)}, nil
+}
+
+func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
+	req_id := ctx.Value(CTX_REQID).(string)
+	if !s.ok() {
+		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
+	}
+	s.buildQuery(ctx, req)
+	count, err := s.getTotalHitsCount(ctx)
+	if err != nil {
+		glog.Errorf("failed to get total count, %v", err)
+		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(CountErrCode), Msg: CountErrCode.String()}, err
+	}
+	return &pb.LogPodCountResponse{ReqId: req_id, Code: 0, Msg: "SUCCESS", Count: uint64(count)}, nil
+}
+
+func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
+	req_id := ctx.Value(CTX_REQID).(string)
+	if req != nil && req.IsTest {
+		return &pb.LogAppResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
+	}
 	if !s.ok() {
 		return &pb.LogAppResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
 
-	start_time := time.Unix(int64(req.StartTime), 0).Format("2006-01-02 03:04:05")
-	end_time := time.Unix(int64(req.EndTime), 0).Format("2006-01-02 03:04:05")
-
-	q := elastic.NewBoolQuery().Must(elastic.NewTermQuery(TERM_APP, req.AppName),
-		elastic.NewRangeQuery(RANGE_FIELD).Gte(start_time).Lte(end_time).Format(TIME_FORMAT).TimeZone(TIME_ZONE))
+	s.buildQuery(ctx, req)
 
 	//1. fetch total count
-	//2. search without search_after field and stored last sort number
-	//3. search with search_after field setting value as last sort number
-	count := s.getTotalHitsCount(ctx, q)
+	//2. search with search_after field, if req has not search_after value, use start_time as search_after value when sort is asc, use end_time as search_after value when sort is desc
+	count, err := s.getTotalHitsCount(ctx)
+	if err != nil {
+		glog.Errorf("failed to get total count, %v", err)
+		return &pb.LogAppResponse{ReqId: req_id, Code: int32(CountErrCode), Msg: CountErrCode.String()}, err
+	}
 	resp := &pb.LogAppResponse{
 		ReqId:      req_id,
 		Code:       0,
+		TotalCount: uint64(count),
 		LogDetails: make([]*pb.LogEntry, 0, count),
 	}
 	var (
 		cnt_handled int64
+		size        int
 		last_sort   interface{}
 		ttyp        RawLogEntry
 	)
-	last_sort = req.EndTime * 1000 //ms
+
+	if req.Size > PER_FETCH_SIZE {
+		size = PER_FETCH_SIZE
+	} else {
+		size = int(req.Size)
+	}
+
+	sort := false //desc
+	if req.Sort == "asc" {
+		sort = true
+	}
+
+	search_after := req.GetSearchAfter()
+	if search_after == 0 {
+		if sort {
+			search_after = req.GetStartTime() * 1000 //ms
+		} else {
+			search_after = req.GetEndTime() * 1000
+		}
+	}
+
 	if count > 0 {
 		podID_Map := make(map[string]*pb.LogEntry)
-		for cnt_handled < count && cnt_handled < TEST_COUNT {
+		flag := true
+		for cnt_handled < int64(size) && flag {
 			searchResult, err := s.client.Search().
-				Size(PER_FETCH_SIZE).
-				Sort(RANGE_FIELD, false).
-				Query(q).
-				SearchAfter(last_sort).
+				Size(size).
+				Sort(RANGE_FIELD, sort).
+				Query(s.query).
+				SearchAfter(search_after).
 				Pretty(true).
 				Do(ctx)
 			if err != nil {
-				source, _ := q.Source()
+				source, _ := s.query.Source()
 				data, _ := json.Marshal(source)
-				glog.Errorf("failed to search after \n, query => %s, %v", data, err)
+				glog.Errorf("failed to search after %v\n, query => %s", err, data)
 				return &pb.LogAppResponse{ReqId: req_id, Code: int32(SearchAfterErrCode), Msg: SearchAfterErrCode.String()}, err
 			}
 			if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
 				last_sort = searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort[0]
 			}
+
+			//last query item count may be less than size, if happened, set flag to be true for break next loop
+			if len(searchResult.Hits.Hits) < size {
+				flag = false
+			}
+
 			logEntrys := handleSearchResult(searchResult, reflect.TypeOf(ttyp))
 			//merge log entry
 			for i, entry := range logEntrys {
@@ -245,66 +342,81 @@ func (s *EsMgrHandler) ListLogByAppName(ctx context.Context, req *pb.LogAppReque
 		for k, _ := range podID_Map {
 			resp.LogDetails = append(resp.LogDetails, podID_Map[k])
 		}
+		resp.LastSearchEnd = uint64(last_sort.(int))
 	}
 	return resp, nil
 }
 
-/*
-type LogPodRequest struct {
-	ReqId                string   `protobuf:"bytes,1,opt,name=req_id,json=reqId,proto3" json:"req_id,omitempty"`
-	PodName              string   `protobuf:"bytes,2,opt,name=pod_name,json=podName,proto3" json:"pod_name,omitempty"`
-	Keywords             []string `protobuf:"bytes,3,rep,name=keywords,proto3" json:"keywords,omitempty"`
-	StartTime            uint64   `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime              uint64   `protobuf:"varint,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-*/
 func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
 	req_id := ctx.Value(CTX_REQID).(string)
+	if req != nil && req.IsTest {
+		return &pb.LogPodResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
+	}
 	if !s.ok() {
 		return &pb.LogPodResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
-	start_time := time.Unix(int64(req.StartTime), 0).Format("2006-01-02 03:04:05")
-	end_time := time.Unix(int64(req.EndTime), 0).Format("2006-01-02 03:04:05")
 
-	glog.V(3).Infof("start_time: %s, end_time: %s", start_time, end_time)
+	glog.V(3).Infof("start_time: %d, end_time: %d", req.GetStartTime(), req.GetEndTime())
+	s.buildQuery(ctx, req)
 
-	q := elastic.NewBoolQuery().Must(elastic.NewTermQuery(TERM_POD, req.PodName),
-		elastic.NewRangeQuery(RANGE_FIELD).Gte(start_time).Lte(end_time).Format(TIME_FORMAT).TimeZone(TIME_ZONE))
-
-	//1. fetch total count
-	//2. search without search_after field and stored last sort number
-	//3. search with search_after field setting value as last sort number
-	count := s.getTotalHitsCount(ctx, q)
+	count, err := s.getTotalHitsCount(ctx)
+	if err != nil {
+		glog.Errorf("failed to get total count, %v", err)
+		return &pb.LogPodResponse{ReqId: req_id, Code: int32(CountErrCode), Msg: CountErrCode.String()}, err
+	}
 	resp := &pb.LogPodResponse{
-		ReqId: req_id,
-		Code:  0,
+		ReqId:      req_id,
+		Code:       0,
+		TotalCount: uint64(count),
 	}
 	var (
 		cnt_handled int64
+		size        int
 		last_sort   interface{}
 		ttyp        RawLogEntry
 	)
-	last_sort = req.EndTime * 1000 //ms
+
+	if req.Size > PER_FETCH_SIZE {
+		size = PER_FETCH_SIZE
+	} else {
+		size = int(req.Size)
+	}
+
+	sort := false //desc
+	if req.Sort == "asc" {
+		sort = true
+	}
+
+	search_after := req.GetSearchAfter()
+	if search_after == 0 {
+		if sort {
+			search_after = req.GetStartTime() * 1000 //ms
+		} else {
+			search_after = req.GetEndTime() * 1000
+		}
+	}
+
 	if count > 0 {
-		for cnt_handled < count {
+		flag := true
+		for cnt_handled < int64(size) && flag {
 			searchResult, err := s.client.Search().
-				Size(PER_FETCH_SIZE).
-				Sort(RANGE_FIELD, false).
-				Query(q).
-				SearchAfter(last_sort).
+				Size(size).
+				Sort(RANGE_FIELD, sort).
+				Query(s.query).
+				SearchAfter(search_after).
 				Pretty(true).
 				Do(ctx)
 			if err != nil {
-				source, _ := q.Source()
+				source, _ := s.query.Source()
 				data, _ := json.Marshal(source)
 				glog.Errorf("failed to search after %v\n, query => %s", err, data)
 				return &pb.LogPodResponse{ReqId: req_id, Code: int32(SearchAfterErrCode), Msg: SearchAfterErrCode.String()}, err
 			}
 			if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
 				last_sort = searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort[0]
+			}
+			if len(searchResult.Hits.Hits) < size {
+				flag = false
 			}
 			logEntrys := handleSearchResult(searchResult, reflect.TypeOf(ttyp))
 			if len(logEntrys) > 0 {
@@ -313,7 +425,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 			}
 			cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
 		}
+		resp.LastSearchEnd = uint64(last_sort.(int))
 	}
 	return resp, nil
-
 }

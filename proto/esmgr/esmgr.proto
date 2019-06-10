@@ -3,7 +3,9 @@ syntax = "proto3";
 package esmgr;
 
 service EsMgr {
-   rpc  ListLogByAppName (LogAppRequest) returns (LogAppResponse) {}
+   rpc  GetLogCountByAppId (LogAppCountRequest) returns (LogAppCountResponse) {}
+   rpc  GetLogCountByPodName (LogPodCountRequest) returns (LogPodCountResponse) {}
+   rpc  ListLogByAppId (LogAppRequest) returns (LogAppResponse) {}
    rpc  ListLogByPodName (LogPodRequest) returns (LogPodResponse) {}
 }
 
@@ -30,15 +32,34 @@ message LogAppRequest {
 	repeated string keywords = 3;
 	uint64 start_time = 4;
 	uint64 end_time = 5;
-    uint32 from = 6;  //start position
+    uint64 search_after = 6;  //search_after: timestamp
     uint32 size = 7;  //max 1000
+    string sort = 8; //asc, desc
+    bool   is_test = 9;
 }
 
 message LogAppResponse {
 	string req_id = 1;
 	int32  code = 2;
 	string msg = 3;
-	repeated LogEntry log_details = 4;
+    uint64 total_count = 4;
+    uint64 last_search_end = 5;
+	repeated LogEntry log_details = 6;
+}
+
+message LogAppCountRequest {
+    string req_id = 1;
+    string app_id = 2;
+    repeated string keywords = 3;
+    uint64 start_time = 4;
+    uint64 end_time = 5;
+}
+
+message LogAppCountResponse {
+    string req_id = 1;
+    int32  code = 2;
+    string msg = 3;
+    uint64 count = 4;
 }
 
 message LogPodRequest {
@@ -47,13 +68,32 @@ message LogPodRequest {
     repeated string keywords = 3;
     uint64 start_time = 4;
     uint64 end_time = 5;
-    uint32 from = 6;
+    uint64 search_after = 6;
     uint32 size = 7;
+    string sort = 8;
+    bool   is_test = 9;
 }
 
 message LogPodResponse {
     string req_id = 1;
     int32  code = 2;
     string msg = 3;
-    LogEntry log_details = 4;
+    uint64 total_count = 4;
+    uint64 last_search_end = 5;
+    LogEntry log_details = 6;
+}
+
+message LogPodCountRequest {
+    string req_id = 1;
+    string pod_name = 2;
+    repeated string keywords = 3;
+    uint64 start_time = 4;
+    uint64 end_time = 5;
+}
+
+message LogPodCountResponse {
+    string req_id = 1;
+    int32  code = 2;
+    string msg = 3;
+    uint64 count = 4;
 }
