@@ -371,6 +371,7 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
 	req_id := "Unknown"
 	md, ok := metadata.FromOutgoingContext(ctx)
+	glog.Infof("ok: %b, md: %v", ok, md)
 	if ok {
 		req_id = md[CTX_REQID][0]
 	}
@@ -423,6 +424,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 		}
 	}
 
+	glog.V(3).Infof("listlogbypodname: size => %d, sort => %b, search_after: %d", size, sort, search_after)
 	if count > 0 {
 		flag := true
 		for cnt_handled < int64(size) && flag {
@@ -439,6 +441,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 				Query(s.query).
 				SearchAfter(search_after).
 				Pretty(true)
+
 			//TODO: DEBUG
 			src, _ := s.query.Source()
 			bs, _ := json.Marshal(src)
