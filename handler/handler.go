@@ -360,7 +360,7 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 		for k, _ := range podID_Map {
 			resp.LogDetails = append(resp.LogDetails, podID_Map[k])
 		}
-		end, ok := last_sort.(int)
+		end, ok := last_sort.(float64)
 		if ok {
 			resp.LastSearchEnd = uint64(end)
 		}
@@ -428,26 +428,13 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 	if count > 0 {
 		flag := true
 		for cnt_handled < int64(size) && flag {
-			//searchResult, err := s.client.Search().
-			//	Size(size).
-			//	Sort(RANGE_FIELD, sort).
-			//	Query(s.query).
-			//	SearchAfter(search_after).
-			//	Pretty(true).
-			//	Do(ctx)
-			searchSource := s.client.Search().
+			searchResult, err := s.client.Search().
 				Size(size).
 				Sort(RANGE_FIELD, sort).
 				Query(s.query).
 				SearchAfter(search_after).
-				Pretty(true)
-
-			//TODO: DEBUG
-			src, _ := s.query.Source()
-			bs, _ := json.Marshal(src)
-			glog.Infof("listlogbypodname: source => %s", bs)
-
-			searchResult, err := searchSource.Do(ctx)
+				Pretty(true).
+				Do(ctx)
 			if err != nil {
 				source, _ := s.query.Source()
 				data, _ := json.Marshal(source)
@@ -469,7 +456,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 			}
 			cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
 		}
-		end, ok := last_sort.(int)
+		end, ok := last_sort.(float64)
 		if ok {
 			resp.LastSearchEnd = uint64(end)
 		}
