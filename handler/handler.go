@@ -84,7 +84,7 @@ Handle flow:
 
 const (
 	ES_URL         = "http://elasticsearch:9200"
-	PER_FETCH_SIZE = 1000
+	PER_FETCH_SIZE = 10
 	CTX_REQID      = "ankr_req_id"
 	//TERM_APP       = "kubernetes.labels.ankr_app_id"
 	TERM_APP    = "kubernetes.labels.app"
@@ -300,7 +300,7 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 	if req.Size > PER_FETCH_SIZE {
 		size = PER_FETCH_SIZE
 	} else {
-		size = int(req.Size)
+		size = int(req.GetSize())
 	}
 
 	sort := false //desc
@@ -360,7 +360,10 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 		for k, _ := range podID_Map {
 			resp.LogDetails = append(resp.LogDetails, podID_Map[k])
 		}
-		resp.LastSearchEnd = uint64(last_sort.(int))
+		end, ok := last_sort.(int)
+		if ok {
+			resp.LastSearchEnd = uint64(end)
+		}
 	}
 	return resp, nil
 }
@@ -374,11 +377,13 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 	if req != nil && req.IsTest {
 		return &pb.LogPodResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
 	}
+
 	if !s.ok() {
 		return &pb.LogPodResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
 
-	glog.V(3).Infof("start_time: %d, end_time: %d", req.GetStartTime(), req.GetEndTime())
+	glog.Infof("start_time: %d, end_time: %d", req.GetStartTime(), req.GetEndTime())
+
 	s.buildQuery(ctx, req)
 
 	count, err := s.getTotalHitsCount(ctx)
@@ -401,7 +406,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 	if req.Size > PER_FETCH_SIZE {
 		size = PER_FETCH_SIZE
 	} else {
-		size = int(req.Size)
+		size = int(req.GetSize())
 	}
 
 	sort := false //desc
@@ -421,13 +426,25 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 	if count > 0 {
 		flag := true
 		for cnt_handled < int64(size) && flag {
-			searchResult, err := s.client.Search().
+			//searchResult, err := s.client.Search().
+			//	Size(size).
+			//	Sort(RANGE_FIELD, sort).
+			//	Query(s.query).
+			//	SearchAfter(search_after).
+			//	Pretty(true).
+			//	Do(ctx)
+			searchSource := s.client.Search().
 				Size(size).
 				Sort(RANGE_FIELD, sort).
 				Query(s.query).
 				SearchAfter(search_after).
-				Pretty(true).
-				Do(ctx)
+				Pretty(true)
+			//TODO: DEBUG
+			src, _ := s.query.Source()
+			bs, _ := json.Marshal(src)
+			glog.Infof("listlogbypodname: source => %s", bs)
+
+			searchResult, err := searchSource.Do(ctx)
 			if err != nil {
 				source, _ := s.query.Source()
 				data, _ := json.Marshal(source)
@@ -447,7 +464,10 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 			}
 			cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
 		}
-		resp.LastSearchEnd = uint64(last_sort.(int))
+		end, ok := last_sort.(int)
+		if ok {
+			resp.LastSearchEnd = uint64(end)
+		}
 	}
 	return resp, nil
 }
