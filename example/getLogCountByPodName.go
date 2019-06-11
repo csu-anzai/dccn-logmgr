@@ -63,10 +63,11 @@ func main() {
 	} else {
 		data, _ := json.MarshalIndent(rsp, "", "  ")
 		fmt.Printf("2: resp json format: %s\n", data)
+		fmt.Printf("2: resp raw format: %v\n", rsp)
 	}
 
 	//3 Search with keywords
-	if rsp, err := esClient.GetLogCountByPodName(reqIdContext, &pb.LogPodCountRequest{ReqId: "req_id", PodName: pod_name, StartTime: start_time, EndTime: end_time, Keywords: []string{"error"}}); err != nil {
+	if rsp, err := esClient.GetLogCountByPodName(reqIdContext, &pb.LogPodCountRequest{ReqId: "req_id", PodName: pod_name, StartTime: start_time, EndTime: end_time, Keywords: []string{"error", "tendermint-2"}}); err != nil {
 		log.Fatal(err.Error())
 	} else {
 		data, _ := json.MarshalIndent(rsp, "", "  ")

@@ -50,7 +50,7 @@ func main() {
 	)
 	start_time := uint64(time.Now().Unix() - ONE_DAY)
 	end_time := uint64(time.Now().Unix())
-	app_id := "monitor"
+	app_id := "dccn-erc20-monitor"
 	//1 TEST
 	if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
 		log.Fatal(err.Error())
@@ -62,13 +62,12 @@ func main() {
 	if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time}); err != nil {
 		log.Fatal(err.Error())
 	} else {
-		search_after = rsp.LastSearchEnd
 		data, _ := json.MarshalIndent(rsp, "", "  ")
 		fmt.Printf("2: resp json format: %s\n", data)
 	}
 
 	//3 Search with keywords
-	if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, Keywords: []string{"info"}}); err != nil {
+	if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, Keywords: []string{"error"}}); err != nil {
 		log.Fatal(err.Error())
 	} else {
 		data, _ := json.MarshalIndent(rsp, "", "  ")

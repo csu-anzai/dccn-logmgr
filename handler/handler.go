@@ -252,7 +252,7 @@ func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCou
 		req_id = md[CTX_REQID][0]
 	}
 	if req != nil && req.IsTest {
-		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
+		return &pb.LogAppCountResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS"}, nil
 	}
 	if !s.ok() {
 		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
@@ -263,7 +263,7 @@ func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCou
 		glog.Errorf("failed to get total count, %v", err)
 		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(CountErrCode), Msg: CountErrCode.String()}, err
 	}
-	return &pb.LogAppCountResponse{ReqId: req_id, Code: 0, Msg: "SUCCESS", Count: uint64(count)}, nil
+	return &pb.LogAppCountResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS", Count: uint64(count)}, nil
 }
 
 func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
@@ -273,7 +273,7 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 		req_id = md[CTX_REQID][0]
 	}
 	if req != nil && req.IsTest {
-		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
+		return &pb.LogPodCountResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS"}, nil
 	}
 	if !s.ok() {
 		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
@@ -284,7 +284,7 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 		glog.Errorf("failed to get total count, %v", err)
 		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(CountErrCode), Msg: CountErrCode.String()}, err
 	}
-	return &pb.LogPodCountResponse{ReqId: req_id, Code: 0, Msg: "SUCCESS", Count: uint64(count)}, nil
+	return &pb.LogPodCountResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS", Count: uint64(count)}, nil
 }
 
 func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
@@ -295,7 +295,7 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 	}
 
 	if req != nil && req.IsTest {
-		return &pb.LogAppResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
+		return &pb.LogAppResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS"}, nil
 	}
 	if !s.ok() {
 		return &pb.LogAppResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
@@ -404,7 +404,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 	}
 	//TEST
 	if req != nil && req.IsTest {
-		return &pb.LogPodResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
+		return &pb.LogPodResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS"}, nil
 	}
 
 	if !s.ok() {
