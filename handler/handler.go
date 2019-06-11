@@ -210,13 +210,13 @@ func (s *EsMgrHandler) buildQuery(ctx context.Context, req interface{}) elastic.
 		term_key = TERM_POD
 		term_value = req.(*pb.LogPodCountRequest).PodName
 		if len(req.(*pb.LogPodCountRequest).Keywords) > 0 {
-			keywords = req.(*pb.LodPodCountRequest).Keywords
+			keywords = req.(*pb.LogPodCountRequest).Keywords
 		}
 	}
 	q := elastic.NewBoolQuery().Must(elastic.NewTermQuery(term_key, term_value),
 		elastic.NewRangeQuery(RANGE_FIELD).Gte(start_time).Lte(end_time).Format(TIME_FORMAT).TimeZone(TIME_ZONE))
 	if len(keywords) > 0 {
-		key_querys := make([]*elastic.TermQuery, 0, len(keywords))
+		key_querys := make([]elastic.Query, 0, len(keywords))
 		for _, k := range keywords {
 			key_querys = append(key_querys, elastic.NewTermQuery(TERM_LOG, k))
 		}

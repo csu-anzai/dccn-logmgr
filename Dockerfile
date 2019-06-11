@@ -7,7 +7,7 @@ RUN apk add --no-cache git
 WORKDIR /dccn-es-api
 COPY . .
 
-RUN CGO_ENABLED=0 go vet ./...
+RUN CGO_ENABLED=0 go vet  $(go list ./...| grep -v /example)
 RUN CGO_ENABLED=0 go build -v 
 
 # Build image, alpine provides more possibilities than scratch
