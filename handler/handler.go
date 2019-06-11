@@ -247,7 +247,7 @@ func (s *EsMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
 
 func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCountRequest) (*pb.LogAppCountResponse, error) {
 	req_id := "Unknown"
-	md, ok := metadata.FromOutgoingContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		req_id = md[CTX_REQID][0]
 	}
@@ -268,7 +268,7 @@ func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCou
 
 func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
 	req_id := "Unknown"
-	md, ok := metadata.FromOutgoingContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		req_id = md[CTX_REQID][0]
 	}
@@ -289,7 +289,7 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 
 func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
 	req_id := "Unknown"
-	md, ok := metadata.FromOutgoingContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		req_id = md[CTX_REQID][0]
 	}
@@ -397,7 +397,7 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 
 func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
 	req_id := "Unknown"
-	md, ok := metadata.FromOutgoingContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
 	glog.Infof("ok: %t, md: %v", ok, md)
 	if ok {
 		req_id = md[CTX_REQID][0]
