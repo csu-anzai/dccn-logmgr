@@ -220,7 +220,8 @@ func (s *EsMgrHandler) buildQuery(ctx context.Context, req interface{}) elastic.
 		for _, k := range keywords {
 			key_querys = append(key_querys, elastic.NewTermQuery(TERM_LOG, k))
 		}
-		q = q.Should(key_querys...)
+		kq := elastic.NewBoolQuery().Should(key_querys...)
+		q = q.Must(kq)
 	}
 	s.query = q
 
@@ -250,6 +251,9 @@ func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCou
 	if ok {
 		req_id = md[CTX_REQID][0]
 	}
+	if req != nil && req.IsTest {
+		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
+	}
 	if !s.ok() {
 		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
@@ -267,6 +271,9 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 	md, ok := metadata.FromOutgoingContext(ctx)
 	if ok {
 		req_id = md[CTX_REQID][0]
+	}
+	if req != nil && req.IsTest {
+		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
 	}
 	if !s.ok() {
 		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed

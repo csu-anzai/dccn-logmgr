@@ -53,6 +53,7 @@ message LogAppCountRequest {
     repeated string keywords = 3;
     uint64 start_time = 4;
     uint64 end_time = 5;
+    bool   is_test = 6;
 }
 
 message LogAppCountResponse {
@@ -89,6 +90,7 @@ message LogPodCountRequest {
     repeated string keywords = 3;
     uint64 start_time = 4;
     uint64 end_time = 5;
+    bool   is_test = 6;
 }
 
 message LogPodCountResponse {
