@@ -4,4 +4,8 @@ vendor
 *.swp
 listLogByPodName.go
 
+example/listLogByAppId
+example/listLogByPodName
+example/getLogCountByAppId
+example/getLogCountByPodName
 Makefile
