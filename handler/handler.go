@@ -84,16 +84,15 @@ Handle flow:
 
 const (
 	ES_URL         = "http://elasticsearch:9200"
-	PER_FETCH_SIZE = 10
+	PER_FETCH_SIZE = 1000
 	CTX_REQID      = "ankr_req_id"
 	//TERM_APP       = "kubernetes.labels.ankr_app_id"
 	TERM_APP    = "kubernetes.labels.app"
 	TERM_POD    = "kubernetes.pod_name"
+	TERM_LOG    = "log"
 	TIME_ZONE   = "+08:00"
 	TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
 	RANGE_FIELD = "@timestamp"
-
-	TEST_COUNT = 10
 )
 
 var (
@@ -178,6 +177,7 @@ func (s *EsMgrHandler) buildQuery(ctx context.Context, req interface{}) elastic.
 		start_time, end_time string
 		term_key             string
 		term_value           interface{}
+		keywords             []string
 	)
 	switch req.(type) {
 	case *pb.LogAppRequest:
@@ -185,30 +185,49 @@ func (s *EsMgrHandler) buildQuery(ctx context.Context, req interface{}) elastic.
 		end_time = time.Unix(int64(req.(*pb.LogAppRequest).EndTime), 0).Format("2006-01-02 03:04:05")
 		term_key = TERM_APP
 		term_value = req.(*pb.LogAppRequest).AppId
+		if len(req.(*pb.LogAppRequest).Keywords) > 0 {
+			keywords = req.(*pb.LogAppRequest).Keywords
+		}
 	case *pb.LogPodRequest:
 		start_time = time.Unix(int64(req.(*pb.LogPodRequest).StartTime), 0).Format("2006-01-02 03:04:05")
 		end_time = time.Unix(int64(req.(*pb.LogPodRequest).EndTime), 0).Format("2006-01-02 03:04:05")
 		term_key = TERM_POD
 		term_value = req.(*pb.LogPodRequest).PodName
+		if len(req.(*pb.LogPodRequest).Keywords) > 0 {
+			keywords = req.(*pb.LogPodRequest).Keywords
+		}
 	case *pb.LogAppCountRequest:
 		start_time = time.Unix(int64(req.(*pb.LogAppCountRequest).StartTime), 0).Format("2006-01-02 03:04:05")
 		end_time = time.Unix(int64(req.(*pb.LogAppCountRequest).EndTime), 0).Format("2006-01-02 03:04:05")
 		term_key = TERM_APP
 		term_value = req.(*pb.LogAppCountRequest).AppId
+		if len(req.(*pb.LogAppCountRequest).Keywords) > 0 {
+			keywords = req.(*pb.LogAppCountRequest).Keywords
+		}
 	case *pb.LogPodCountRequest:
 		start_time = time.Unix(int64(req.(*pb.LogPodCountRequest).StartTime), 0).Format("2006-01-02 03:04:05")
 		end_time = time.Unix(int64(req.(*pb.LogPodCountRequest).EndTime), 0).Format("2006-01-02 03:04:05")
 		term_key = TERM_POD
 		term_value = req.(*pb.LogPodCountRequest).PodName
+		if len(req.(*pb.LogPodCountRequest).Keywords) > 0 {
+			keywords = req.(*pb.LodPodCountRequest).Keywords
+		}
 	}
 	q := elastic.NewBoolQuery().Must(elastic.NewTermQuery(term_key, term_value),
 		elastic.NewRangeQuery(RANGE_FIELD).Gte(start_time).Lte(end_time).Format(TIME_FORMAT).TimeZone(TIME_ZONE))
+	if len(keywords) > 0 {
+		key_querys := make([]*elastic.TermQuery, 0, len(keywords))
+		for _, k := range keywords {
+			key_querys = append(key_querys, elastic.NewTermQuery(TERM_LOG, k))
+		}
+		q = q.Should(key_querys...)
+	}
 	s.query = q
 
-	source, err := q.Source()
-	glog.Infof("build query(err): %v", err)
+	//TODO: DEBUG
+	source, _ := q.Source()
 	data, _ := json.Marshal(source)
-	glog.Infof("build query(data): %s", data)
+	glog.Infof("bool query => %s", data)
 	return q
 }
 
@@ -225,7 +244,6 @@ func (s *EsMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
-/////
 func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCountRequest) (*pb.LogAppCountResponse, error) {
 	req_id := "Unknown"
 	md, ok := metadata.FromOutgoingContext(ctx)
@@ -268,6 +286,7 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 	if ok {
 		req_id = md[CTX_REQID][0]
 	}
+
 	if req != nil && req.IsTest {
 		return &pb.LogAppResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
 	}
@@ -316,6 +335,7 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 			search_after = req.GetEndTime() * 1000
 		}
 	}
+	glog.V(3).Infof("listlogbyappid: size => %d, sort => %t, search_after: %d", size, sort, search_after)
 
 	if count > 0 {
 		podID_Map := make(map[string]*pb.LogEntry)
@@ -375,6 +395,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 	if ok {
 		req_id = md[CTX_REQID][0]
 	}
+	//TEST
 	if req != nil && req.IsTest {
 		return &pb.LogPodResponse{ReqId: req_id, Code: int32(0), Msg: "SUCCESS"}, nil
 	}
@@ -382,8 +403,6 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 	if !s.ok() {
 		return &pb.LogPodResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
-
-	glog.Infof("start_time: %d, end_time: %d", req.GetStartTime(), req.GetEndTime())
 
 	s.buildQuery(ctx, req)
 
