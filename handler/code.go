@@ -3,6 +3,7 @@ package handler
 type Code int32
 
 const (
+	SuccessCode        Code = 200
 	InternalErrCode    Code = 501
 	SearchAfterErrCode Code = 10001
 	CountErrCode       Code = 10002
@@ -11,6 +12,8 @@ const (
 func (c Code) String() string {
 	var ret string
 	switch c {
+	case 200:
+		ret = "SUCCESS"
 	case 501:
 		ret = "ping failed"
 	case 10001:
