@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"time"
 
-	pb "github.com/Ankr-network/dccn-es-api/proto/esmgr"
+	pb "github.com/Ankr-network/dccn-common/protos/logmgr/v1/grpc"
 	"github.com/golang/glog"
 	"github.com/olivere/elastic"
 	"google.golang.org/grpc/metadata"
@@ -15,35 +15,6 @@ import (
 
 /*
 Example:
-GET _search
-{
-    "query": {
-        "bool": {
-            "must": [
-                {
-                    "term": {
-                        "kubernetes.pod_name": "facade"
-                    }
-                }
-            ],
-            "filter": [
-                {
-                    "range": {
-                        "@timestamp": {
-                            "gte": "03/06/2019",
-                            "lte": "now",
-                            "format": "dd/MM/yyyy||yyyy",
-                            "time_zone": "+08:00"
-                        }
-                    }
-                }
-            ]
-        }
-    }
-}
-
-or
-
 GET _search
 {
     "query": {
@@ -86,9 +57,9 @@ const (
 	ES_URL         = "http://elasticsearch:9200"
 	PER_FETCH_SIZE = 1000
 	CTX_REQID      = "ankr_req_id"
-	//TERM_APP       = "kubernetes.labels.ankr_app_id"
-	TERM_APP    = "kubernetes.labels.app"
-	TERM_POD    = "kubernetes.pod_name"
+	TERM_APP       = "kubernetes.labels.ankr_app_id.keyword"
+	//TERM_APP    = "kubernetes.labels.app.keyword"
+	TERM_POD    = "kubernetes.pod_name.keyword"
 	TERM_LOG    = "log"
 	TIME_ZONE   = "+08:00"
 	TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
@@ -96,9 +67,10 @@ const (
 )
 
 var (
-	ErrPingFailed  = errors.New("failed to ping es node")
-	ErrQueryNil    = errors.New("query is nil")
-	ErrCountFailed = errors.New("failed to get count")
+	ErrPingFailed  = ankr_default.ErrElasticsearchPing
+	ErrQueryNil    = ankr_default.ErrElasticsearchQuery
+	ErrCountFailed = ankr_default.ErrElasticsearchCount
+	ErrSearchAfter = ankr_default.ErrElasticsearchSearchAfter
 )
 
 type EsMgrHandler struct {
@@ -252,7 +224,7 @@ func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCou
 		req_id = md[CTX_REQID][0]
 	}
 	if req != nil && req.IsTest {
-		return &pb.LogAppCountResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS"}, nil
+		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(SuccessCode), Msg: SuccessCode.String()}, nil
 	}
 	if !s.ok() {
 		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
@@ -263,7 +235,7 @@ func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCou
 		glog.Errorf("failed to get total count, %v", err)
 		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(CountErrCode), Msg: CountErrCode.String()}, err
 	}
-	return &pb.LogAppCountResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS", Count: uint64(count)}, nil
+	return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(SuccessCode), Msg: SuccessCode.String(), Count: uint64(count)}, nil
 }
 
 func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
@@ -273,7 +245,7 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 		req_id = md[CTX_REQID][0]
 	}
 	if req != nil && req.IsTest {
-		return &pb.LogPodCountResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS"}, nil
+		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(SuccessCode), Msg: SuccessCode.String()}, nil
 	}
 	if !s.ok() {
 		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
@@ -284,7 +256,7 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 		glog.Errorf("failed to get total count, %v", err)
 		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(CountErrCode), Msg: CountErrCode.String()}, err
 	}
-	return &pb.LogPodCountResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS", Count: uint64(count)}, nil
+	return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(SuccessCode), Msg: SuccessCode.String(), Count: uint64(count)}, nil
 }
 
 func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
@@ -295,7 +267,7 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 	}
 
 	if req != nil && req.IsTest {
-		return &pb.LogAppResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS"}, nil
+		return &pb.LogAppResponse{ReqId: req_id, Code: int32(SuccessCode), Msg: SuccessCode.String()}, nil
 	}
 	if !s.ok() {
 		return &pb.LogAppResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
@@ -404,7 +376,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 	}
 	//TEST
 	if req != nil && req.IsTest {
-		return &pb.LogPodResponse{ReqId: req_id, Code: 200, Msg: "SUCCESS"}, nil
+		return &pb.LogPodResponse{ReqId: req_id, Code: int32(SuccessCode), Msg: SuccessCode.String()}, nil
 	}
 
 	if !s.ok() {
@@ -465,7 +437,7 @@ func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodReque
 				source, _ := s.query.Source()
 				data, _ := json.Marshal(source)
 				glog.Errorf("failed to search after %v\n, query => %s", err, data)
-				return &pb.LogPodResponse{ReqId: req_id, Code: int32(SearchAfterErrCode), Msg: SearchAfterErrCode.String()}, err
+				return &pb.LogPodResponse{ReqId: req_id, Code: int32(SearchAfterErrCode), Msg: SearchAfterErrCode.String()}, ErrSearchAfter
 			}
 
 			if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
