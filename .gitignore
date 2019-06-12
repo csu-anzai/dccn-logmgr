@@ -1,5 +1,5 @@
 .idea
-dccn-es-api
+dccn-logmgr
 vendor
 *.swp
 listLogByPodName.go

@@ -6,8 +6,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/Ankr-network/dccn-es-api/handler"
-	pb "github.com/Ankr-network/dccn-es-api/proto/esmgr"
+	pb "github.com/Ankr-network/dccn-common/protos/logmgr/v1/grpc"
+	"github.com/Ankr-network/dccn-logmgr/handler"
 	"google.golang.org/grpc"
 )
 
@@ -28,12 +28,12 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	server, err := handler.NewEsMgrHandler()
+	server, err := handler.NewLogMgrHandler()
 	if err != nil {
 		log.Fatalf("failed to create es client, %v", err)
 	}
 	server.Ping()
-	pb.RegisterEsMgrServer(s, server)
+	pb.RegisterLogMgrServer(s, server)
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

@@ -3,10 +3,10 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"reflect"
 	"time"
 
+	ankr_default "github.com/Ankr-network/dccn-common/protos"
 	pb "github.com/Ankr-network/dccn-common/protos/logmgr/v1/grpc"
 	"github.com/golang/glog"
 	"github.com/olivere/elastic"
@@ -73,16 +73,16 @@ var (
 	ErrSearchAfter = ankr_default.ErrElasticsearchSearchAfter
 )
 
-type EsMgrHandler struct {
+type LogMgrHandler struct {
 	client *elastic.Client
 	url    string
 	query  elastic.Query
 }
 
-type HandlerOptionFunc func(*EsMgrHandler) error
+type HandlerOptionFunc func(*LogMgrHandler) error
 
 func SetURL(url string) HandlerOptionFunc {
-	return func(es *EsMgrHandler) error {
+	return func(es *LogMgrHandler) error {
 		es.url = url
 		return nil
 	}
@@ -116,8 +116,8 @@ func handleSearchResult(result *elastic.SearchResult, typ reflect.Type) []*pb.Lo
 	return log_entrys
 }
 
-func NewEsMgrHandler(options ...HandlerOptionFunc) (*EsMgrHandler, error) {
-	es := &EsMgrHandler{url: ES_URL}
+func NewLogMgrHandler(options ...HandlerOptionFunc) (*LogMgrHandler, error) {
+	es := &LogMgrHandler{url: ES_URL}
 	for _, opt := range options {
 		opt(es)
 	}
@@ -129,11 +129,11 @@ func NewEsMgrHandler(options ...HandlerOptionFunc) (*EsMgrHandler, error) {
 	return es, nil
 }
 
-func (s *EsMgrHandler) Ping() bool {
+func (s *LogMgrHandler) Ping() bool {
 	return s.ok()
 }
 
-func (s *EsMgrHandler) ok() bool {
+func (s *LogMgrHandler) ok() bool {
 	ctx := context.Background()
 	info, code, err := s.client.Ping(s.url).Do(ctx)
 	if err != nil {
@@ -144,7 +144,7 @@ func (s *EsMgrHandler) ok() bool {
 	return true
 }
 
-func (s *EsMgrHandler) buildQuery(ctx context.Context, req interface{}) elastic.Query {
+func (s *LogMgrHandler) buildQuery(ctx context.Context, req interface{}) elastic.Query {
 	var (
 		start_time, end_time string
 		term_key             string
@@ -204,7 +204,7 @@ func (s *EsMgrHandler) buildQuery(ctx context.Context, req interface{}) elastic.
 	return q
 }
 
-func (s *EsMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
+func (s *LogMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
 	if s.query == nil {
 		glog.Errorf("query must not be nil")
 		return 0, ErrQueryNil
@@ -217,7 +217,7 @@ func (s *EsMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
-func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCountRequest) (*pb.LogAppCountResponse, error) {
+func (s *LogMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCountRequest) (*pb.LogAppCountResponse, error) {
 	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
@@ -238,7 +238,7 @@ func (s *EsMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCou
 	return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(SuccessCode), Msg: SuccessCode.String(), Count: uint64(count)}, nil
 }
 
-func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
+func (s *LogMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
 	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
@@ -259,7 +259,7 @@ func (s *EsMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodC
 	return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(SuccessCode), Msg: SuccessCode.String(), Count: uint64(count)}, nil
 }
 
-func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
+func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
 	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
@@ -367,7 +367,7 @@ func (s *EsMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest
 	return resp, nil
 }
 
-func (s *EsMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
+func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
 	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
 	glog.Infof("ok: %t, md: %v", ok, md)
