@@ -4,7 +4,7 @@ jobs:
     docker:
       # Build in Python container to install AWS CLI
       - image: circleci/golang:1.12
-    working_directory: /go/src/github.com/Ankr-network/dccn-es-api
+    working_directory: /go/src/github.com/Ankr-network/dccn-logmgr
     steps:
       - checkout
       - setup_remote_docker
@@ -48,18 +48,18 @@ jobs:
             fi
             docker build --no-cache -f Dockerfile -t $BRANCH_NAE .
             for TAG in $BRANCH_NAE $SHA1_SHORT $BRANCH_NAE$DATE; do
-              docker tag $BRANCH_NAE $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-es-api:$TAG
-              docker push $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-es-api:$TAG
+              docker tag $BRANCH_NAE $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-logmgr:$TAG
+              docker push $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-logmgr:$TAG
             done
             kops export kubecfg --name ${K8S_CLUSTER}.k8s.ankr.network --state s3://kops.${K8S_CLUSTER}.config
-            kubectl apply -f kubernetes/dccn-es-api-svc.yml
+            kubectl apply -f kubernetes/dccn-logmgr-svc.yml
 
-            kubectl set image dccn-es-api=$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-es-api:${BRANCH_NAE}${DATE} --local -f kubernetes/dccn-es-api.yml -o yaml > kubernetes/dccn-es-api_patch.yml
-            cat kubernetes/dccn-es-api_patch.yml
-            kubectl apply -f kubernetes/dccn-es-api_patch.yml -n logging
-            if ! kubectl rollout status deploy/dccn-es-api -n logging --watch=true --timeout=60s; then
+            kubectl set image dccn-logmgr=$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-logmgr:${BRANCH_NAE}${DATE} --local -f kubernetes/dccn-logmgr.yml -o yaml > kubernetes/dccn-logmgr_patch.yml
+            cat kubernetes/dccn-logmgr_patch.yml
+            kubectl apply -f kubernetes/dccn-logmgr_patch.yml -n logging
+            if ! kubectl rollout status deploy/dccn-logmgr -n logging --watch=true --timeout=60s; then
               echo "Deploy failed, roll back to previous version"
-              kubectl rollout undo deploy/dccn-es-api -n logging
+              kubectl rollout undo deploy/dccn-logmgr -n logging
             fi
             kubectl get deployment -n logging
             kubectl get svc -n logging
