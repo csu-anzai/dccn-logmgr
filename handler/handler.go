@@ -284,7 +284,7 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 	}
 	resp := &pb.LogAppResponse{
 		ReqId:      req_id,
-		Code:       0,
+		Code:       int32(SuccessCode),
 		TotalCount: uint64(count),
 		LogDetails: make([]*pb.LogEntry, 0, count),
 	}
@@ -392,7 +392,7 @@ func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequ
 	}
 	resp := &pb.LogPodResponse{
 		ReqId:      req_id,
-		Code:       0,
+		Code:       int32(SuccessCode),
 		TotalCount: uint64(count),
 	}
 	var (

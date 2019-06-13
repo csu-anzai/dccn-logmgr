@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	pb "github.com/Ankr-network/dccn-es-api/proto/esmgr"
+	pb "github.com/Ankr-network/dccn-common/protos/logmgr/v1/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -30,7 +30,7 @@ func main() {
 		}
 	}(conn)
 
-	esClient := pb.NewEsMgrClient(conn)
+	esClient := pb.NewLogMgrClient(conn)
 
 	md := metadata.New(map[string]string{
 		CTX_REQID: "req-001",
