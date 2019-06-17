@@ -1,17 +1,17 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: dccn-logmgr
+  name: logmgr
   namespace: logging
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: dccn-logmgr
+      app: logmgr
   template:
     metadata:
       labels:
-        app: dccn-logmgr
+        app: logmgr
     spec:
       containers:
         - name: dccn-logmgr
