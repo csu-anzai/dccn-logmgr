@@ -55,13 +55,13 @@ Handle flow:
 
 const (
 	ES_URL         = "http://elasticsearch:9200"
-	PER_FETCH_SIZE = 1000
+	PER_FETCH_SIZE = 500
 	CTX_REQID      = "ankr_req_id"
-	TERM_APP       = "kubernetes.labels.ankr_app_id.keyword"
+	TERM_APP       = "kubernetes.labels.ankrAppID.keyword"
 	//TERM_APP    = "kubernetes.labels.app.keyword"
 	TERM_POD    = "kubernetes.pod_name.keyword"
 	TERM_LOG    = "log"
-	TIME_ZONE   = "+08:00"
+	TIME_ZONE   = "+00:00"
 	TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
 	RANGE_FIELD = "@timestamp"
 )
