@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var addr = "localhost:50001"
+var addr = "localhost:50051"
 
 const (
 	CTX_REQID = "ankr_req_id"

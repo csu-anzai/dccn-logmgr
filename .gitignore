@@ -2,7 +2,6 @@
 dccn-logmgr
 vendor
 *.swp
-listLogByPodName.go
 
 example/listLogByAppId
 example/listLogByPodName

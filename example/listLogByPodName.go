@@ -36,8 +36,8 @@ func main() {
 		CTX_REQID: "req-001",
 	})
 
-	reqIdContext := metadata.NewOutgoingContext(context.Background(), md)
-	//reqIdContext, cancel := context.WithTimeout(ctx, 20*time.Second)
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	reqIdContext, cancel := context.WithTimeout(ctx, 20*time.Second)
 
 	md, ok := metadata.FromOutgoingContext(reqIdContext)
 	if ok {
@@ -45,16 +45,17 @@ func main() {
 	} else {
 		fmt.Println("req_id: unknown")
 	}
-	//defer cancel()
+	defer cancel()
 
 	const (
-		ONE_DAY = int64(24 * time.Hour / time.Second)
+		ONE_DAY  = int64(24 * time.Hour / time.Second)
+		ONE_WEEK = int64(2 * 24 * time.Hour / time.Second)
 	)
-	start_time := uint64(time.Now().Unix() - ONE_DAY)
+	start_time := uint64(time.Now().Unix() - ONE_WEEK)
 	end_time := uint64(time.Now().Unix())
-	app_id := "monitor"
+	pod_name := "dccn-erc20-monitor-6d6fdbf687-kzfdf"
 	//1 TEST
-	if rsp, err := esClient.ListLogByAppId(reqIdContext, &pb.LogAppRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
+	if rsp, err := esClient.ListLogByPodName(reqIdContext, &pb.LogPodRequest{ReqId: "req_id", PodName: pod_name, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
 		log.Fatal(err.Error())
 	} else {
 		fmt.Printf("1: resp: %v\n", rsp)
@@ -62,7 +63,10 @@ func main() {
 
 	var search_after uint64
 	//2 First search
-	if rsp, err := esClient.ListLogByAppId(reqIdContext, &pb.LogAppRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, Size: 10}); err != nil {
+	req := &pb.LogPodRequest{ReqId: "req_id", PodName: pod_name, StartTime: start_time, EndTime: end_time, Size: 10, Keywords: []string{"error"}}
+	data, _ := json.MarshalIndent(req, "", "  ")
+	fmt.Printf("2: req json format => %s\n", data)
+	if rsp, err := esClient.ListLogByPodName(reqIdContext, req); err != nil {
 		log.Fatal(err.Error())
 	} else {
 		search_after = rsp.LastSearchEnd
@@ -71,7 +75,10 @@ func main() {
 	}
 
 	//3 Search witch search_after
-	if rsp, err := esClient.ListLogByAppId(reqIdContext, &pb.LogAppRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, Size: 10, SearchAfter: search_after}); err != nil {
+	req = &pb.LogPodRequest{ReqId: "req_id", PodName: pod_name, StartTime: start_time, EndTime: end_time, Size: 10, SearchAfter: search_after, Keywords: []string{"error"}}
+	data, _ = json.MarshalIndent(req, "", "  ")
+	fmt.Printf("3: req json format => %s\n", data)
+	if rsp, err := esClient.ListLogByPodName(reqIdContext, req); err != nil {
 		log.Fatal(err.Error())
 	} else {
 		search_after = rsp.LastSearchEnd
@@ -80,11 +87,12 @@ func main() {
 	}
 
 	//4 Search with keywords
-	if rsp, err := esClient.ListLogByAppId(reqIdContext, &pb.LogAppRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time,
-		Size: 100, SearchAfter: search_after, Keywords: []string{"error"}}); err != nil {
+	req = &pb.LogPodRequest{ReqId: "req_id", PodName: pod_name, StartTime: start_time, EndTime: end_time, Size: 10, SearchAfter: search_after, Keywords: []string{"error"}}
+	data, _ = json.MarshalIndent(req, "", "  ")
+	fmt.Printf("4: req json format => %s\n", data)
+	if rsp, err := esClient.ListLogByPodName(reqIdContext, req); err != nil {
 		log.Fatal(err.Error())
 	} else {
-		search_after = rsp.LastSearchEnd
 		data, _ := json.MarshalIndent(rsp, "", "  ")
 		fmt.Printf("4: resp json format: %s\n", data)
 	}
