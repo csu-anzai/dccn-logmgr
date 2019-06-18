@@ -220,7 +220,7 @@ func (s *LogMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
 func (s *LogMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCountRequest) (*pb.LogAppCountResponse, error) {
 	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
-	if ok {
+	if ok && len(md[CTX_REQID]) != 0 {
 		req_id = md[CTX_REQID][0]
 	}
 	if req != nil && req.IsTest {
@@ -241,7 +241,7 @@ func (s *LogMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCo
 func (s *LogMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
 	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
-	if ok {
+	if ok && len(md[CTX_REQID]) != 0 {
 		req_id = md[CTX_REQID][0]
 	}
 	if req != nil && req.IsTest {
@@ -262,7 +262,7 @@ func (s *LogMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPod
 func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
 	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
-	if ok {
+	if ok && len(md[CTX_REQID]) != 0 {
 		req_id = md[CTX_REQID][0]
 	}
 
@@ -371,7 +371,7 @@ func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequ
 	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
 	glog.Infof("ok: %t, md: %v", ok, md)
-	if ok {
+	if ok && len(md[CTX_REQID]) != 0 {
 		req_id = md[CTX_REQID][0]
 	}
 	//TEST

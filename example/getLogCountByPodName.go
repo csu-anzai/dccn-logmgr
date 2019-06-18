@@ -49,7 +49,7 @@ func main() {
 	)
 	start_time := uint64(time.Now().Unix() - ONE_WEEK)
 	end_time := uint64(time.Now().Unix())
-	pod_name := "monitor"
+	pod_name := "dccn-erc20-monitor-585fc554bb-9nhvc"
 	//1 TEST
 	if rsp, err := esClient.GetLogCountByPodName(reqIdContext, &pb.LogPodCountRequest{ReqId: "req_id", PodName: pod_name, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
 		log.Fatal(err.Error())
