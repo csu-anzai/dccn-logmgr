@@ -7,8 +7,14 @@ metadata:
     app: logmgr
 spec:
   ports:
-    - port: 50051
+    - name: grpc
+      port: 50051
       targetPort: 50051
+      protocol: TCP
+    - name: pgrpc
+      port: 50052
+      targetPort: 50052
       protocol: TCP
   selector:
     app: logmgr
+  type: LoadBalancer

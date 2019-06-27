@@ -77,7 +77,7 @@ LogAppResponse
 |msg|string|required|Interpretation of return code|
 |total_count|uint64|required|Total number of log items statisfied with request requirement|
 |last_search_end|uint64|required|Endpoint of log items in current request|
-|log_details|[]LogEntry|required|Log items and pod metadata group by pod name|
+|log_items|[]LogItem|required|Log items and pod metadata|
 
 * ListLogByPodName
 
@@ -104,14 +104,15 @@ LogPodResponse
 |msg|string|required|Interpretation of return code|
 |total_count|uint64|required|Total number of log items statisfied with request requirement|
 |last_search_end|uint64|required|Endpoint of log items in current request|
-|log_details|LogEntry|required|Log items and pod metadata|
+|log_items|[]LogItem|required|Log items and pod metadata|
 
-LogEntry
+LogItem
 
 |Parameter | Type |Need | Description |
 |:-----|:-----|:-----|:-----|
 |meta_data|LogMetaData|required|Meta data of pod|
-|log_items|[]LogItem|required|Log details|
+|timestamp|string|required|Log record timestamp|
+|msg|string|required|Log record content|
 
 LogMetaData
 
@@ -122,17 +123,13 @@ LogMetaData
 |namespace_name|string|required|Namespace name|
 |namespace_id|string|required|Namespace ID|
 
-LogItem
-
-|Parameter | Type |Need | Description |
-|:-----|:-----|:-----|:-----|
-|timestamp|string|required|Log record timestamp|
-|msg|string|required|Log content|
-
 ## Example
 
-For example, we want to display a pod(dccn-erc20-monitor-6d6fdbf687-kzfdf) log containing keyword error  in last two days, 
+For example, we want to display an app(app-843ceaed-ddf2-4398-a2a2-010814854de4) log containing keyword error  in last two days, 
 10 per request and sorted by asc.
+
+**Note**: Just for show log request and response format, please replace the real app_id, start_time and end_time parameters 
+you want to search.
 
 * Step 1
 
@@ -140,12 +137,12 @@ Get total log count
 
 **Request**
 
-json format
+JSON format
 
 ```
 {
   "req_id": "",
-  "pod_name": "dccn-erc20-monitor-6d6fdbf687-kzfdf",
+  "app_id": "app-843ceaed-ddf2-4398-a2a2-010814854de4",
   "keywords": [
     "error"
   ],
@@ -156,7 +153,7 @@ json format
 
 **Response**
 
-json format
+JSON format
 
 ```
 {
@@ -177,7 +174,7 @@ Get log details without search_after for first time.
 ```
 {
   "req_id": "",
-  "pod_name": "dccn-erc20-monitor-6d6fdbf687-kzfdf",
+  "app_id": "app-843ceaed-ddf2-4398-a2a2-010814854de4",
   "keywords": [
     "error"
   ],
@@ -195,56 +192,28 @@ Get log details without search_after for first time.
   "code": 200,
   "total_count": 64,
   "last_search_end": 1560724536116,
-  "log_details": {
+  "log_items": [
+  {
     "meta_data": {
-      "pod_name": "dccn-erc20-monitor-6d6fdbf687-kzfdf",
+      "pod_name": "app-843ceaed-ddf2-4398-a2a2-010814854de4-wordpress-767df69qqpj4",
       "pod_id": "d647bd22-9031-11e9-b5ef-06810cbb0e0a",
       "namespace_name": "default",
       "namespace_id": "f7cebe82-108b-11e9-a5fa-0661f96854a6"
     },
-    "log_items": [
-      {
-        "timestamp": "2019-06-17T01:45:36.115770548+00:00",
-        "msg": "time=\"2019-06-17T01:45:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:40670-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-17T01:25:36.118228296+00:00",
-        "msg": "time=\"2019-06-17T01:25:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:37770-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-17T01:05:36.115896261+00:00",
-        "msg": "time=\"2019-06-17T01:05:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:34990-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-17T00:45:36.116277971+00:00",
-        "msg": "time=\"2019-06-17T00:45:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:60496-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-17T00:25:36.115793257+00:00",
-        "msg": "time=\"2019-06-17T00:25:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:52120-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-17T00:05:36.115746419+00:00",
-        "msg": "time=\"2019-06-17T00:05:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:47690-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T23:45:36.115765405+00:00",
-        "msg": "time=\"2019-06-16T23:45:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:41026-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T23:15:36.115771214+00:00",
-        "msg": "time=\"2019-06-16T23:15:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:37004-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T22:55:36.115905251+00:00",
-        "msg": "time=\"2019-06-16T22:55:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:34406-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T22:35:36.116264990+00:00",
-        "msg": "time=\"2019-06-16T22:35:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:60000-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      }
-    ]
-  }
+    "timestamp": "2019-06-17T01:45:36.115770548+00:00",
+    "msg": "time=\"2019-06-17T01:45:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:40670-\u003e134.209.51.194:8546: use of closed network connection\"\n"
+  }, {
+    "meta_data": {
+      "pod_name": "app-843ceaed-ddf2-4398-a2a2-010814854de4-wordpress-767df69qqpj4",
+      "pod_id": "d647bd22-9031-11e9-b5ef-06810cbb0e0a",
+      "namespace_name": "default",
+      "namespace_id": "f7cebe82-108b-11e9-a5fa-0661f96854a6"
+    },
+    "timestamp": "2019-06-17T01:35:36.115770548+00:00",
+    "msg": "time=\"2019-06-17T01:35:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:40670-\u003e134.209.51.194:8546: use of closed network connection\"\n"
+  },
+  ....
+  ]
 }
 
 ```
@@ -259,7 +228,7 @@ Get log details with search_after value using last_search_end value
 ```
 {
   "req_id": "",
-  "pod_name": "dccn-erc20-monitor-6d6fdbf687-kzfdf",
+  "app_id": "app-843ceaed-ddf2-4398-a2a2-010814854de4-wordpress-767df69qqpj4",
   "keywords": [
     "error"
   ],
@@ -278,67 +247,42 @@ Get log details with search_after value using last_search_end value
   "code": 200,
   "total_count": 64,
   "last_search_end": 1560712536116,
-  "log_details": {
+  "log_items": [
+  {
     "meta_data": {
-      "pod_name": "dccn-erc20-monitor-6d6fdbf687-kzfdf",
+      "pod_name": "app-843ceaed-ddf2-4398-a2a2-010814854de4-wordpress-767df69qqpj4",
       "pod_id": "d647bd22-9031-11e9-b5ef-06810cbb0e0a",
       "namespace_name": "default",
       "namespace_id": "f7cebe82-108b-11e9-a5fa-0661f96854a6"
     },
-    "log_items": [
-      {
-        "timestamp": "2019-06-16T22:15:36.115669172+00:00",
-        "msg": "time=\"2019-06-16T22:15:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:57428-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T21:55:36.115754487+00:00",
-        "msg": "time=\"2019-06-16T21:55:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:52706-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T21:35:36.115821406+00:00",
-        "msg": "time=\"2019-06-16T21:35:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:45630-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T21:15:36.115801272+00:00",
-        "msg": "time=\"2019-06-16T21:15:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:42958-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T20:55:36.132539565+00:00",
-        "msg": "time=\"2019-06-16T20:55:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: dial tcp 134.209.51.194:8546: connect: connection refused\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T20:45:36.116832475+00:00",
-        "msg": "time=\"2019-06-16T20:45:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:38656-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T20:25:36.115791691+00:00",
-        "msg": "time=\"2019-06-16T20:25:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:34548-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T19:55:36.115810371+00:00",
-        "msg": "time=\"2019-06-16T19:55:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:53446-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T19:35:36.116717278+00:00",
-        "msg": "time=\"2019-06-16T19:35:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:50692-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      },
-      {
-        "timestamp": "2019-06-16T19:15:36.116300656+00:00",
-        "msg": "time=\"2019-06-16T19:15:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:47910-\u003e134.209.51.194:8546: use of closed network connection\"\n"
-      }
-    ]
-  }
+    "timestamp": "2019-06-16T22:15:36.115669172+00:00",
+    "msg": "time=\"2019-06-16T22:15:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:57428-\u003e134.209.51.194:8546: use of closed network connection\"\n"
+  },
+  {
+    "meta_data": {
+      "pod_name": "app-843ceaed-ddf2-4398-a2a2-010814854de4-wordpress-767df69qqpj4",
+      "pod_id": "d647bd22-9031-11e9-b5ef-06810cbb0e0a",
+      "namespace_name": "default",
+      "namespace_id": "f7cebe82-108b-11e9-a5fa-0661f96854a6"
+    },
+    "timestamp": "2019-06-16T21:35:36.115821406+00:00",
+    "msg": "time=\"2019-06-16T21:35:36Z\" level=error msg=\"keepWSConnectionCycle, get the latest block error: write tcp 100.96.1.58:45630-\u003e134.209.51.194:8546: use of closed network connection\"\n"
+  },
+  ...
+]
 }
+
 ```
 
 * Step 4-8
 
-Repeat Step 3 by changing search_after value with last_search_end and other fields unchanged 
+Repeat Step 3 by changing search_after value with last_search_end and leave other fields unchanged 
 to get remaining log items.
 
 ## Other
-If you want to display log by AppID, please use GetLogCountByAppId and
-ListLogByAppId API similar to the above procedure.
+
+If you want to display log by PodName, please use GetLogCountByPodName and
+ListLogByPodName API similar to the above procedure.
 
 
 

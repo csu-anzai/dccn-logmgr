@@ -6,10 +6,12 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Ankr-network/dccn-common/pgrpc"
 	ankr_default "github.com/Ankr-network/dccn-common/protos"
 	pb "github.com/Ankr-network/dccn-common/protos/logmgr/v1/grpc"
 	"github.com/golang/glog"
 	"github.com/olivere/elastic"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -54,7 +56,7 @@ Handle flow:
 */
 
 const (
-	ES_URL         = "http://elasticsearch:9200"
+	ES_URL         = "http://elasticsearch.logging:9200"
 	PER_FETCH_SIZE = 500
 	CTX_REQID      = "ankr_req_id"
 	TERM_APP       = "kubernetes.labels.ankrAppID.keyword"
@@ -64,6 +66,7 @@ const (
 	TIME_ZONE   = "+00:00"
 	TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
 	RANGE_FIELD = "@timestamp"
+	CTX_DC_ID   = "ankr_dc_id"
 )
 
 var (
@@ -77,6 +80,8 @@ type LogMgrHandler struct {
 	client *elastic.Client
 	url    string
 	query  elastic.Query
+
+	dcID string
 }
 
 type HandlerOptionFunc func(*LogMgrHandler) error
@@ -88,36 +93,27 @@ func SetURL(url string) HandlerOptionFunc {
 	}
 }
 
-func handleSearchResult(result *elastic.SearchResult, typ reflect.Type) []*pb.LogEntry {
-	log_entrys := make([]*pb.LogEntry, 0, len(result.Hits.Hits))
-	podID_Map := make(map[string]*pb.LogEntry)
+func handleSearchResult(result *elastic.SearchResult, typ reflect.Type) []*pb.LogItem {
+	log_items := make([]*pb.LogItem, 0, len(result.Hits.Hits))
 	for _, item := range result.Each(typ) {
 		if l, ok := item.(RawLogEntry); ok {
-			log_entry := new(pb.LogEntry)
-			var exist bool
-			if log_entry, exist = podID_Map[l.Kubernetes.PodID]; !exist {
-				log_entry = &pb.LogEntry{
-					MetaData: &pb.LogMetaData{
-						PodId:         l.Kubernetes.PodID,
-						PodName:       l.Kubernetes.PodName,
-						NamespaceId:   l.Kubernetes.NamespaceID,
-						NamespaceName: l.Kubernetes.NamespaceName,
-					},
-					LogItems: make([]*pb.LogItem, 0),
-				}
-				podID_Map[l.Kubernetes.PodID] = log_entry
-			} else {
-				log_entry = podID_Map[l.Kubernetes.PodID]
-			}
-			log_entry.LogItems = append(log_entry.LogItems, &pb.LogItem{Timestamp: l.Timestamp, Msg: l.Log})
-			log_entrys = append(log_entrys, log_entry)
+			log_items = append(log_items, &pb.LogItem{
+				MetaData: &pb.LogMetaData{
+					PodId:         l.Kubernetes.PodID,
+					PodName:       l.Kubernetes.PodName,
+					NamespaceId:   l.Kubernetes.NamespaceID,
+					NamespaceName: l.Kubernetes.NamespaceName,
+				},
+				Timestamp: l.Timestamp,
+				Msg:       l.Log,
+			})
 		}
 	}
-	return log_entrys
+	return log_items
 }
 
-func NewLogMgrHandler(options ...HandlerOptionFunc) (*LogMgrHandler, error) {
-	es := &LogMgrHandler{url: ES_URL}
+func NewLogMgrHandler(dcID string, options ...HandlerOptionFunc) (*LogMgrHandler, error) {
+	es := &LogMgrHandler{url: ES_URL, dcID: dcID}
 	for _, opt := range options {
 		opt(es)
 	}
@@ -218,8 +214,20 @@ func (s *LogMgrHandler) getTotalHitsCount(ctx context.Context) (int64, error) {
 }
 
 func (s *LogMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCountRequest) (*pb.LogAppCountResponse, error) {
-	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
+	if ok && len(md[CTX_DC_ID]) != 0 && md[CTX_DC_ID][0] != s.dcID {
+		conn, err := pgrpc.Dial(md[CTX_DC_ID][0])
+		if err != nil {
+			glog.Errorln(err)
+			return nil, err
+		}
+
+		resp, err := pb.NewLogMgrClient(conn).GetLogCountByAppId(ctx, req)
+		pgrpc.PutCC(conn, err)
+		return resp, errors.Wrap(err, "remote fail")
+	}
+
+	req_id := "Unknown"
 	if ok && len(md[CTX_REQID]) != 0 {
 		req_id = md[CTX_REQID][0]
 	}
@@ -239,8 +247,20 @@ func (s *LogMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCo
 }
 
 func (s *LogMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPodCountRequest) (*pb.LogPodCountResponse, error) {
-	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
+	if ok && len(md[CTX_DC_ID]) != 0 && md[CTX_DC_ID][0] != s.dcID {
+		conn, err := pgrpc.Dial(md[CTX_DC_ID][0])
+		if err != nil {
+			glog.Errorln(err)
+			return nil, err
+		}
+
+		resp, err := pb.NewLogMgrClient(conn).GetLogCountByPodName(ctx, req)
+		pgrpc.PutCC(conn, err)
+		return resp, errors.Wrap(err, "remote fail")
+	}
+
+	req_id := "Unknown"
 	if ok && len(md[CTX_REQID]) != 0 {
 		req_id = md[CTX_REQID][0]
 	}
@@ -260,8 +280,20 @@ func (s *LogMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPod
 }
 
 func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppRequest) (*pb.LogAppResponse, error) {
-	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
+	if ok && len(md[CTX_DC_ID]) != 0 && md[CTX_DC_ID][0] != s.dcID {
+		conn, err := pgrpc.Dial(md[CTX_DC_ID][0])
+		if err != nil {
+			glog.Errorln(err)
+			return nil, err
+		}
+
+		resp, err := pb.NewLogMgrClient(conn).ListLogByAppId(ctx, req)
+		pgrpc.PutCC(conn, err)
+		return resp, errors.Wrap(err, "remote fail")
+	}
+
+	req_id := "Unknown"
 	if ok && len(md[CTX_REQID]) != 0 {
 		req_id = md[CTX_REQID][0]
 	}
@@ -286,7 +318,6 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 		ReqId:      req_id,
 		Code:       int32(SuccessCode),
 		TotalCount: uint64(count),
-		LogDetails: make([]*pb.LogEntry, 0, count),
 	}
 	var (
 		cnt_handled int64
@@ -317,7 +348,7 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 	glog.V(3).Infof("listlogbyappid: size => %d, sort => %t, search_after: %d", size, sort, search_after)
 
 	if count > 0 {
-		podID_Map := make(map[string]*pb.LogEntry)
+		logItems := make([]*pb.LogItem, 0, size)
 		flag := true
 		for cnt_handled < int64(size) && flag {
 			searchResult, err := s.client.Search().
@@ -342,23 +373,10 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 				flag = false
 			}
 
-			logEntrys := handleSearchResult(searchResult, reflect.TypeOf(ttyp))
-			//merge log entry
-			for i, entry := range logEntrys {
-				if _, exists := podID_Map[entry.MetaData.PodId]; !exists {
-					podID_Map[entry.MetaData.PodId] = logEntrys[i]
-				} else {
-					if podID_Map[entry.MetaData.PodId].LogItems == nil {
-						podID_Map[entry.MetaData.PodId].LogItems = make([]*pb.LogItem, 0, len(entry.LogItems))
-					}
-					podID_Map[entry.MetaData.PodId].LogItems = append(podID_Map[entry.MetaData.PodId].LogItems, entry.LogItems...)
-				}
-			}
+			logItems = append(logItems, handleSearchResult(searchResult, reflect.TypeOf(ttyp))...)
 			cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
 		}
-		for k, _ := range podID_Map {
-			resp.LogDetails = append(resp.LogDetails, podID_Map[k])
-		}
+		resp.LogItems = logItems
 		end, ok := last_sort.(float64)
 		if ok {
 			resp.LastSearchEnd = uint64(end)
@@ -368,9 +386,21 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 }
 
 func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
-	req_id := "Unknown"
 	md, ok := metadata.FromIncomingContext(ctx)
 	glog.Infof("ok: %t, md: %v", ok, md)
+	if ok && len(md[CTX_DC_ID]) != 0 && md[CTX_DC_ID][0] != s.dcID {
+		conn, err := pgrpc.Dial(md[CTX_DC_ID][0])
+		if err != nil {
+			glog.Errorln(err)
+			return nil, err
+		}
+
+		resp, err := pb.NewLogMgrClient(conn).ListLogByPodName(ctx, req)
+		pgrpc.PutCC(conn, err)
+		return resp, errors.Wrap(err, "remote fail")
+	}
+
+	req_id := "Unknown"
 	if ok && len(md[CTX_REQID]) != 0 {
 		req_id = md[CTX_REQID][0]
 	}
@@ -425,6 +455,7 @@ func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequ
 	glog.V(3).Infof("listlogbypodname: size => %d, sort => %t, search_after: %d", size, sort, search_after)
 	if count > 0 {
 		flag := true
+		logItems := make([]*pb.LogItem, 0, size)
 		for cnt_handled < int64(size) && flag {
 			searchResult, err := s.client.Search().
 				Size(size).
@@ -447,13 +478,10 @@ func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequ
 			if len(searchResult.Hits.Hits) < size {
 				flag = false
 			}
-			logEntrys := handleSearchResult(searchResult, reflect.TypeOf(ttyp))
-			if len(logEntrys) > 0 {
-				resp.LogDetails = logEntrys[0]
-
-			}
+			logItems = append(logItems, handleSearchResult(searchResult, reflect.TypeOf(ttyp))...)
 			cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
 		}
+		resp.LogItems = append(resp.LogItems, logItems...)
 		end, ok := last_sort.(float64)
 		if ok {
 			resp.LastSearchEnd = uint64(end)

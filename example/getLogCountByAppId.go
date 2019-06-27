@@ -16,6 +16,7 @@ var addr = "localhost:50051"
 
 const (
 	CTX_REQID = "ankr_req_id"
+	CTX_DCID  = "ankr_dc_id"
 )
 
 func main() {
@@ -34,6 +35,8 @@ func main() {
 
 	md := metadata.New(map[string]string{
 		CTX_REQID: "req-001",
+		CTX_DCID:  "cls-e9242b31-3f8e-4d0a-b04f-913ff9f01ffe",
+		//CTX_DCID: "abc",
 	})
 
 	reqIdContext := metadata.NewOutgoingContext(context.Background(), md)
@@ -50,13 +53,13 @@ func main() {
 	)
 	start_time := uint64(time.Now().Unix() - ONE_DAY)
 	end_time := uint64(time.Now().Unix())
-	app_id := "dccn-erc20-monitor"
+	app_id := "app-843ceaed-ddf2-4398-a2a2-010814854de4"
 	//1 TEST
-	if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
-		log.Fatal(err.Error())
-	} else {
-		fmt.Printf("1: resp: %v\n", rsp)
-	}
+	//if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
+	//	log.Fatal(err.Error())
+	//} else {
+	//	fmt.Printf("1: resp: %v\n", rsp)
+	//}
 
 	//2 Search without keywords
 	if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time}); err != nil {
