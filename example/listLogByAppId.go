@@ -62,8 +62,11 @@ func main() {
 	}
 
 	var search_after uint64
+	req := &pb.LogAppRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, Size: 10}
+	data, _ := json.MarshalIndent(req, "", "  ")
+	fmt.Printf("2: req json format: %s\n", data)
 	//2 First search
-	if rsp, err := esClient.ListLogByAppId(reqIdContext, &pb.LogAppRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, Size: 10}); err != nil {
+	if rsp, err := esClient.ListLogByAppId(reqIdContext, req); err != nil {
 		log.Fatal(err.Error())
 	} else {
 		search_after = rsp.LastSearchEnd

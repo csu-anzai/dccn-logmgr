@@ -55,11 +55,11 @@ func main() {
 	end_time := uint64(time.Now().Unix())
 	app_id := "app-843ceaed-ddf2-4398-a2a2-010814854de4"
 	//1 TEST
-	//if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
-	//	log.Fatal(err.Error())
-	//} else {
-	//	fmt.Printf("1: resp: %v\n", rsp)
-	//}
+	if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
+		log.Fatal(err.Error())
+	} else {
+		fmt.Printf("1: resp: %v\n", rsp)
+	}
 
 	//2 Search without keywords
 	if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time}); err != nil {
