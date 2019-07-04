@@ -39,17 +39,20 @@ jobs:
               BRANCH_NAME="dev"
               K8S_CLUSTER="stage.hub"
               CHARTMUSEUM_URL="http://chart-stage.dccn.ankr.com:8080"
+              LOGMGR_HUB_URL="http://logmgr-stage.dccn.ankr.com:50052"
             elif [[ ($BRANCH_NAME == "master") ]]
             then
               BRANCH_NAME="stage"
               K8S_CLUSTER="hub"
               CHARTMUSEUM_URL="http://chart.dccn.ankr.com:8080"
+              LOGMGR_HUB_URL="http://logmgr.dccn.ankr.com:50052"
             else
               BRANCH_NAME="feat"
               K8S_CLUSTER="dev.hub"
               CHARTMUSEUM_URL="http://chart-dev.dccn.ankr.com:8080"
+              LOGMGR_HUB_URL="http://logmgr-dev.dccn.ankr.com:50052"
             fi
-            docker build --no-cache -f Dockerfile -t $BRANCH_NAME .
+            docker build --no-cache --build-arg LOGMGR_HUB_URL=${LOGMGR_HUB_URL} -f Dockerfile -t $BRANCH_NAME .
             for TAG in $BRANCH_NAME $SHA1_SHORT $BRANCH_NAME$DATE; do
               docker tag $BRANCH_NAME $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-logmgr:$TAG
               docker push $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-logmgr:$TAG
@@ -74,11 +77,8 @@ jobs:
 
             kubectl set image dccn-logmgr=$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-logmgr:${BRANCH_NAME}${DATE} --local -f kubernetes/logmgr.yml -o yaml > kubernetes/logmgr_patch.yml
             cat kubernetes/logmgr_patch.yml
-            kubectl apply -f kubernetes/logmgr_patch.yml -n logging
-            if ! kubectl rollout status deploy/logmgr -n logging --watch=true --timeout=60s; then
+            kubectl apply -f kubernetes/logmgr_patch.yml 
+            if ! kubectl rollout status deploy/logmgr --watch=true --timeout=60s; then
               echo "Deploy failed, roll back to previous version"
-              kubectl rollout undo deploy/logmgr -n logging
+              kubectl rollout undo deploy/logmgr 
             fi
-            kubectl get deployment -n logging
-            kubectl get svc -n logging
-            kubectl get pods -n logging

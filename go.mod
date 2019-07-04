@@ -3,7 +3,7 @@ module github.com/Ankr-network/dccn-logmgr
 go 1.12
 
 require (
-	github.com/Ankr-network/dccn-common v0.0.0-20190627041137-59de0e667698
+	github.com/Ankr-network/dccn-common v0.0.0-20190703040703-29e224a9ef48
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.3.1 // indirect

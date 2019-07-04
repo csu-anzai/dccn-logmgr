@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Ankr-network/dccn-common/pgrpc"
@@ -21,10 +22,10 @@ const (
 )
 
 var dcID = os.Getenv("DAEMON_ID")
+var isDaemon = os.Getenv("IS_DAEMON")
 var hubLogMgrAddr string
 
 func init() {
-	flag.StringVar(&hubLogMgrAddr, "hub-logmgr-addr", "", "ankr hub logmgr address")
 	flag.Set("logtostderr", "true")
 	flag.Set("v", "3")
 	flag.Parse()
@@ -39,7 +40,9 @@ func main() {
 	server.Ping()
 
 	// in daemon
-	if hubLogMgrAddr != "" {
+	if isDaemon == "true" {
+		log.Println("++++++   In daemon environment  ++++++++")
+		hubLogMgrAddr = strings.TrimPrefix(hubLogMgrAddr, "http://")
 		s := grpc.NewServer()
 		pb.RegisterLogMgrServer(s, server)
 		util.RegisterPingServer(s, new(util.Server))
@@ -56,6 +59,7 @@ func main() {
 	}
 
 	// in hub
+	log.Println("++++++   In hub environment  ++++++++")
 	if err := pgrpc.InitClient("tcp", RELAY_PORT, nil, util.PingHook, grpc.WithInsecure()); err != nil {
 		log.Fatalf("failed to init pgrpc: %v", err)
 	}

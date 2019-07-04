@@ -2,6 +2,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 github.com/Ankr-network/dccn-common v0.0.0-20190622101155-52bfd109dd04 h1:NpO3r/SZEW1yFe/V6Qw/tV5QGwgn+WomxYp15c65sj8=
 github.com/Ankr-network/dccn-common v0.0.0-20190627041137-59de0e667698 h1:n/2GzBMnS0PqFTEdVbSzu63SM/4xTduK9OBntODRevE=
 github.com/Ankr-network/dccn-common v0.0.0-20190627041137-59de0e667698/go.mod h1:WUt3X9WvObUhiLKzv6qb5rueU0URYmk0AHUuQ3shn6E=
+github.com/Ankr-network/dccn-common v0.0.0-20190703040703-29e224a9ef48 h1:lR03suMbVV2AjZ/xbV9uaCR7LhNiKkNYmq2rX3LINy4=
+github.com/Ankr-network/dccn-common v0.0.0-20190703040703-29e224a9ef48/go.mod h1:WUt3X9WvObUhiLKzv6qb5rueU0URYmk0AHUuQ3shn6E=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/fortytw2/leaktest v1.3.0 h1:u8491cBMTQ8ft8aeV+adlcytMZylmA5nnwwkRZjI8vw=

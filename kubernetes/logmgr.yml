@@ -2,7 +2,6 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: logmgr
-  namespace: logging
 spec:
   replicas: 1
   selector:
