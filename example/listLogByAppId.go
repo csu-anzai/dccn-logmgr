@@ -53,7 +53,7 @@ func main() {
 	)
 	start_time := uint64(time.Now().Unix() - ONE_DAY)
 	end_time := uint64(time.Now().Unix())
-	app_id := "app-843ceaed-ddf2-4398-a2a2-010814854de4"
+	app_id := "app-18607317-b7a9-4b0c-9e98-6ab2ae4178f7"
 	//1 TEST
 	if rsp, err := esClient.ListLogByAppId(reqIdContext, &pb.LogAppRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
 		log.Fatal(err.Error())

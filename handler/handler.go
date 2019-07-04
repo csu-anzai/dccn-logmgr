@@ -59,7 +59,7 @@ const (
 	ES_URL         = "http://elasticsearch.logging:9200"
 	PER_FETCH_SIZE = 500
 	CTX_REQID      = "ankr_req_id"
-	TERM_APP       = "kubernetes.labels.ankrAppID.keyword"
+	TERM_APP       = "kubernetes.labels.release.keyword"
 	//TERM_APP    = "kubernetes.labels.app.keyword"
 	TERM_POD    = "kubernetes.pod_name.keyword"
 	TERM_LOG    = "log"
