@@ -1,0 +1,12 @@
+.idea
+.vscode
+dccn-logmgr
+vendor
+*.swp
+
+example/listLogByAppId
+example/listLogByPodName
+example/getLogCountByAppId
+example/getLogCountByPodName
+Makefile
+.DS_Store

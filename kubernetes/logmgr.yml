@@ -1,0 +1,21 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: logmgr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logmgr
+  template:
+    metadata:
+      labels:
+        app: logmgr
+    spec:
+      containers:
+        - name: dccn-logmgr
+          image: 815280425737.dkr.ecr.us-west-2.amazonaws.com/dccn-logmgr:feat
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 50051
+            - containerPort: 50052
