@@ -12,6 +12,7 @@ import (
 	"github.com/Ankr-network/dccn-common/pgrpc/util"
 	pb "github.com/Ankr-network/dccn-common/protos/logmgr/v1/grpc"
 	"github.com/Ankr-network/dccn-logmgr/handler"
+	"github.com/golang/glog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -48,7 +49,11 @@ func main() {
 		util.RegisterPingServer(s, new(util.Server))
 		reflection.Register(s)
 
-		lis, err := pgrpc.Listen("tcp", hubLogMgrAddr, dcID, func(conn *net.Conn, _ error) {
+		lis, err := pgrpc.Listen("tcp", hubLogMgrAddr, dcID, func(conn *net.Conn, err error) {
+			if err != nil {
+				glog.Errorf("pgrpc onaccept faied, %v", err)
+				return
+			}
 			log.Println("new relay connection from: ", (*conn).RemoteAddr().String())
 		})
 		if err != nil {
