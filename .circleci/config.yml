@@ -75,9 +75,9 @@ jobs:
             kops export kubecfg --name ${K8S_CLUSTER}.k8s.ankr.network --state s3://kops.${K8S_CLUSTER}.config
             kubectl apply -f kubernetes/logmgr-svc.yml
 
-            kubectl set image dccn-logmgr=$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-logmgr:${BRANCH_NAME}${DATE} --local -f kubernetes/logmgr.yml -o yaml > kubernetes/logmgr_patch.yml
-            cat kubernetes/logmgr_patch.yml
-            kubectl apply -f kubernetes/logmgr_patch.yml 
+            kubectl set image dccn-logmgr=$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/dccn-logmgr:${BRANCH_NAME}${DATE} --local -f kubernetes/logmgr.yml -o yaml > kubernetes/logmgr_patch_${DATE}.yml
+            cat kubernetes/logmgr_patch_${DATE}.yml
+            kubectl apply -f kubernetes/logmgr_patch_${DATE}.yml --record
             if ! kubectl rollout status deploy/logmgr --watch=true --timeout=60s; then
               echo "Deploy failed, roll back to previous version"
               kubectl rollout undo deploy/logmgr 
