@@ -364,17 +364,19 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 				glog.Errorf("failed to search after %v\n, query => %s", err, data)
 				return &pb.LogAppResponse{ReqId: req_id, Code: int32(SearchAfterErrCode), Msg: SearchAfterErrCode.String()}, err
 			}
-			if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
-				last_sort = searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort[0]
-			}
+			if searchResult != nil && searchResult.Hits != nil && len(searchResult.Hits.Hits) > 0 {
+				if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
+					last_sort = searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort[0]
+				}
 
-			//last query item count may be less than size, if happened, set flag to be true for break next loop
-			if len(searchResult.Hits.Hits) < size {
-				flag = false
-			}
+				//last query item count may be less than size, if happened, set flag to be true for break next loop
+				if len(searchResult.Hits.Hits) < size {
+					flag = false
+				}
 
-			logItems = append(logItems, handleSearchResult(searchResult, reflect.TypeOf(ttyp))...)
-			cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
+				logItems = append(logItems, handleSearchResult(searchResult, reflect.TypeOf(ttyp))...)
+				cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
+			}
 		}
 		resp.LogItems = logItems
 		end, ok := last_sort.(float64)
@@ -387,7 +389,6 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 
 func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequest) (*pb.LogPodResponse, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
-	glog.Infof("ok: %t, md: %v", ok, md)
 	if ok && len(md[CTX_DC_ID]) != 0 && md[CTX_DC_ID][0] != s.dcID {
 		conn, err := pgrpc.Dial(md[CTX_DC_ID][0])
 		if err != nil {
@@ -470,16 +471,17 @@ func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequ
 				glog.Errorf("failed to search after %v\n, query => %s", err, data)
 				return &pb.LogPodResponse{ReqId: req_id, Code: int32(SearchAfterErrCode), Msg: SearchAfterErrCode.String()}, ErrSearchAfter
 			}
-
-			if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
-				last_sort = searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort[0]
-				glog.Infof("last_sort: %v", searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort)
+			if searchResult != nil && searchResult.Hits != nil && len(searchResult.Hits.Hits) > 0 {
+				if len(searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort) == 1 {
+					last_sort = searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort[0]
+					glog.Infof("last_sort: %v", searchResult.Hits.Hits[len(searchResult.Hits.Hits)-1].Sort)
+				}
+				if len(searchResult.Hits.Hits) < size {
+					flag = false
+				}
+				logItems = append(logItems, handleSearchResult(searchResult, reflect.TypeOf(ttyp))...)
+				cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
 			}
-			if len(searchResult.Hits.Hits) < size {
-				flag = false
-			}
-			logItems = append(logItems, handleSearchResult(searchResult, reflect.TypeOf(ttyp))...)
-			cnt_handled = cnt_handled + int64(len(searchResult.Hits.Hits))
 		}
 		resp.LogItems = append(resp.LogItems, logItems...)
 		end, ok := last_sort.(float64)
