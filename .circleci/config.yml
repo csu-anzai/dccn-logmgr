@@ -66,7 +66,8 @@ jobs:
             CHART_TGZ=${CHART_TGZ//charts\/}
             CHART_VERSION=$(echo -e ${CHARTS_JSON//,/\\n} | grep version | awk -F':' '{print $2}' | sed 's/\"//g')
             curl -sSLf ${CHARTMUSEUM_URL}/${CHART_PATH}/charts/${CHART_TGZ} | tar xz
-            sed -i "s/tag: feat.*/tag: $BRANCH_NAME$DATE/" ${CHART_NAME}/values.yaml
+            sed -i "s/tag: .*/tag: $BRANCH_NAME$DATE/" ${CHART_NAME}/values.yaml
+            cat ${CHART_NAME}/values.yaml
             tar czf ${CHART_TGZ} ${CHART_NAME}
             curl --data-binary "@${CHART_TGZ}" ${CHARTMUSEUM_URL}/${CHART_PATH}/api/charts
             rm -rf ${CHART_TGZ} ${CHART_NAME}
