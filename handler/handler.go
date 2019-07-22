@@ -237,6 +237,7 @@ func (s *LogMgrHandler) GetLogCountByAppId(ctx context.Context, req *pb.LogAppCo
 	if !s.ok() {
 		return &pb.LogAppCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
+	ctx = context.Background()
 	s.buildQuery(ctx, req)
 	count, err := s.getTotalHitsCount(ctx)
 	if err != nil {
@@ -270,6 +271,7 @@ func (s *LogMgrHandler) GetLogCountByPodName(ctx context.Context, req *pb.LogPod
 	if !s.ok() {
 		return &pb.LogPodCountResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
+	ctx = context.Background()
 	s.buildQuery(ctx, req)
 	count, err := s.getTotalHitsCount(ctx)
 	if err != nil {
@@ -305,6 +307,7 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 		return &pb.LogAppResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
 
+	ctx = context.Background()
 	s.buildQuery(ctx, req)
 
 	//1. fetch total count
@@ -345,7 +348,7 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 			search_after = req.GetEndTime() * 1000
 		}
 	}
-	glog.V(3).Infof("listlogbyappid: size => %d, sort => %t, search_after: %d", size, sort, search_after)
+	glog.V(3).Infof("listlogbyappid: size => %d, sort => %t, search_after: %d, total_count: %d", size, sort, search_after, count)
 
 	if count > 0 {
 		logItems := make([]*pb.LogItem, 0, size)
@@ -384,6 +387,7 @@ func (s *LogMgrHandler) ListLogByAppId(ctx context.Context, req *pb.LogAppReques
 			resp.LastSearchEnd = uint64(end)
 		}
 	}
+	glog.V(3).Infof("listlogbyappid [SUCCEED]: handled log items => %d, last search end => %d", len(resp.LogItems), resp.LastSearchEnd)
 	return resp, nil
 }
 
@@ -414,8 +418,8 @@ func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequ
 		return &pb.LogPodResponse{ReqId: req_id, Code: int32(InternalErrCode), Msg: InternalErrCode.String()}, ErrPingFailed
 	}
 
+	ctx = context.Background()
 	s.buildQuery(ctx, req)
-
 	count, err := s.getTotalHitsCount(ctx)
 	if err != nil {
 		glog.Errorf("failed to get total count, %v", err)
@@ -453,7 +457,7 @@ func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequ
 		}
 	}
 
-	glog.V(3).Infof("listlogbypodname: size => %d, sort => %t, search_after: %d", size, sort, search_after)
+	glog.V(3).Infof("listlogbypodname: size => %d, sort => %t, search_after: %d, total_count: %d", size, sort, search_after, count)
 	if count > 0 {
 		flag := true
 		logItems := make([]*pb.LogItem, 0, size)
@@ -489,5 +493,6 @@ func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequ
 			resp.LastSearchEnd = uint64(end)
 		}
 	}
+	glog.V(3).Infof("listlogbypodname [SUCCEED]: handled log items => %d, last search end => %d", len(resp.LogItems), resp.LastSearchEnd)
 	return resp, nil
 }
