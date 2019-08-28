@@ -19,3 +19,4 @@ spec:
           ports:
             - containerPort: 50051
             - containerPort: 50052
+            - containerPort: 9090
