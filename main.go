@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -12,14 +13,19 @@ import (
 	"github.com/Ankr-network/dccn-common/pgrpc/util"
 	pb "github.com/Ankr-network/dccn-common/protos/logmgr/v1/grpc"
 	"github.com/Ankr-network/dccn-logmgr/handler"
+	"github.com/Ankr-network/dccn-logmgr/metric"
 	"github.com/golang/glog"
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 const (
-	PORT       = ":50051"
-	RELAY_PORT = ":50052"
+	PORT        = ":50051"
+	RELAY_PORT  = ":50052"
+	METRIC_PORT = ":9090"
 )
 
 var dcID = os.Getenv("DAEMON_ID")
@@ -33,16 +39,26 @@ func init() {
 }
 
 func main() {
-	log.Println("++++++++  dccn-es-api start  +++++++++++++")
+	log.Println(">>>>>>>>>>>>>    DCCN LogMgr Start    >>>>>>>>>>>>>>>>>")
 	server, err := handler.NewLogMgrHandler(dcID)
 	if err != nil {
 		log.Fatalf("failed to create es client, %v", err)
 	}
+	//prometheus metric
+	go func(h *handler.LogMgrHandler) {
+		log.Println(">>>>>>>>>>>    Start prometheus metric monitor    >>>>>>>>>>>")
+		router := mux.NewRouter()
+		collector := metric.NewLogMgrCollector(h)
+		prometheus.MustRegister(collector)
+		router.Handle("/metrics", promhttp.Handler())
+		log.Fatal(http.ListenAndServe(METRIC_PORT, router))
+	}(server)
+
 	server.Ping()
 
 	// in daemon
 	if isDaemon == "true" {
-		log.Println("++++++   In daemon environment  ++++++++")
+		log.Println("<<<<<<<<<<<    Daemon Side    >>>>>>>>>>>")
 		hubLogMgrAddr = strings.TrimPrefix(hubLogMgrAddr, "http://")
 		s := grpc.NewServer()
 		pb.RegisterLogMgrServer(s, server)
@@ -64,7 +80,7 @@ func main() {
 	}
 
 	// in hub
-	log.Println("++++++   In hub environment  ++++++++")
+	log.Println("<<<<<<<<<<<<<    Hub Side    >>>>>>>>>>>>>>")
 	if err := pgrpc.InitClient("tcp", RELAY_PORT, nil, util.PingHook, grpc.WithInsecure()); err != nil {
 		log.Fatalf("failed to init pgrpc: %v", err)
 	}

@@ -35,7 +35,7 @@ func main() {
 
 	md := metadata.New(map[string]string{
 		CTX_REQID: "req-001",
-		CTX_DCID:  "cls-e9242b31-3f8e-4d0a-b04f-913ff9f01ffe",
+		CTX_DCID:  "cls-bd2c1731-5093-4e1d-bed7-3f750c17ee6e",
 		//CTX_DCID: "abc",
 	})
 
@@ -49,11 +49,12 @@ func main() {
 	}
 
 	const (
-		ONE_DAY = int64(24 * time.Hour / time.Second)
+		ONE_DAY = int64(24 * 7 * time.Hour / time.Second)
 	)
 	start_time := uint64(time.Now().Unix() - ONE_DAY)
 	end_time := uint64(time.Now().Unix())
-	app_id := "app-18607317-b7a9-4b0c-9e98-6ab2ae4178f7"
+	//app_id := "app-18607317-b7a9-4b0c-9e98-6ab2ae4178f7"
+	app_id := "app-cc477b1c-7351-43c8-9b1a-0174ba787197"
 	//1 TEST
 	if rsp, err := esClient.GetLogCountByAppId(reqIdContext, &pb.LogAppCountRequest{ReqId: "req_id", AppId: app_id, StartTime: start_time, EndTime: end_time, IsTest: true}); err != nil {
 		log.Fatal(err.Error())
