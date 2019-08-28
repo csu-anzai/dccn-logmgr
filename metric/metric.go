@@ -2,6 +2,7 @@ package metric
 
 import (
 	"github.com/Ankr-network/dccn-logmgr/handler"
+	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -37,6 +38,7 @@ func (c *LogMgrCollector) Collect(ch chan<- prometheus.Metric) {
 	} else {
 		metricValue[float64(1)] = 0
 	}
-
+	glog.V(3).Infof("metric:Collect, metricValue=%+v", metricValue)
+	glog.V(3).Infof("metric:Collect, ping result: %+v", c.handler.Ping())
 	ch <- prometheus.MustNewConstHistogram(c.logmgrMetric, uint64(1), 1, metricValue)
 }
