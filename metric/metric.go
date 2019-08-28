@@ -30,7 +30,7 @@ func (c *LogMgrCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *LogMgrCollector) Collect(ch chan<- prometheus.Metric) {
 	metricValue := make(map[float64]uint64)
-	if c.handler != nil {
+	if c.handler == nil {
 		return
 	}
 	if ok := c.handler.Ping(); ok {
