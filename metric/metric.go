@@ -5,17 +5,21 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	namespace = "logmgr"
+)
+
 type LogMgrCollector struct {
-	logmgrMetric *prometheus.Desc
-	handler      *handler.LogMgrHandler
+	esUp    *prometheus.Desc
+	handler *handler.LogMgrHandler
 }
 
 func NewLogMgrCollector(h *handler.LogMgrHandler) *LogMgrCollector {
 
 	return &LogMgrCollector{
-		logmgrMetric: prometheus.NewDesc(
-			"logmgr_metric",
-			"Shows whether the logmgr work well in k8s cluster",
+		esUp: prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, "", "elasticsearch_up"),
+			"Could Elasticsearch be reached in k8s cluster",
 			nil,
 			nil,
 		),
@@ -24,20 +28,20 @@ func NewLogMgrCollector(h *handler.LogMgrHandler) *LogMgrCollector {
 }
 
 func (c *LogMgrCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- c.logmgrMetric
+	ch <- c.esUp
 }
 
 func (c *LogMgrCollector) Collect(ch chan<- prometheus.Metric) {
-	metricValue := make(map[float64]uint64)
 	if c.handler == nil {
 		return
 	}
 	if ok := c.handler.Ping(); ok {
-		metricValue[float64(1)] = 1
+		ch <- prometheus.MustNewConstMetric(c.esUp, prometheus.GaugeValue, 1)
 	} else {
-		metricValue[float64(1)] = 0
+		ch <- prometheus.MustNewConstMetric(c.esUp, prometheus.GaugeValue, 0)
 	}
+	//metricValue := make(map[float64]uint64)
 	//glog.V(3).Infof("metric:Collect, metricValue=%+v", metricValue)
 	//glog.V(3).Infof("metric:Collect, ping result: %+v", c.handler.Ping())
-	ch <- prometheus.MustNewConstHistogram(c.logmgrMetric, uint64(1), 1, metricValue)
+	//ch <- prometheus.MustNewConstHistogram(c.logmgrMetric, uint64(1), 1, metricValue)
 }
