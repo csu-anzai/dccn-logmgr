@@ -1,4 +1,4 @@
-package metric
+package collector
 
 import (
 	"github.com/Ankr-network/dccn-logmgr/handler"
@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	namespace = "logmgr"
+	NAMESPACE_LOGMGR = "logmgr"
 )
 
 type LogMgrCollector struct {
@@ -18,7 +18,7 @@ func NewLogMgrCollector(h *handler.LogMgrHandler) *LogMgrCollector {
 
 	return &LogMgrCollector{
 		esUp: prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "", "elasticsearch_up"),
+			prometheus.BuildFQName(NAMESPACE_LOGMGR, "elasticsearch", "up"),
 			"Could Elasticsearch be reached in k8s cluster",
 			nil,
 			nil,
@@ -40,8 +40,4 @@ func (c *LogMgrCollector) Collect(ch chan<- prometheus.Metric) {
 	} else {
 		ch <- prometheus.MustNewConstMetric(c.esUp, prometheus.GaugeValue, 0)
 	}
-	//metricValue := make(map[float64]uint64)
-	//glog.V(3).Infof("metric:Collect, metricValue=%+v", metricValue)
-	//glog.V(3).Infof("metric:Collect, ping result: %+v", c.handler.Ping())
-	//ch <- prometheus.MustNewConstHistogram(c.logmgrMetric, uint64(1), 1, metricValue)
 }

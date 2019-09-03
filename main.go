@@ -12,8 +12,8 @@ import (
 	"github.com/Ankr-network/dccn-common/pgrpc"
 	"github.com/Ankr-network/dccn-common/pgrpc/util"
 	pb "github.com/Ankr-network/dccn-common/protos/logmgr/v1/grpc"
+	"github.com/Ankr-network/dccn-logmgr/collector"
 	"github.com/Ankr-network/dccn-logmgr/handler"
-	"github.com/Ankr-network/dccn-logmgr/metric"
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
@@ -32,10 +32,21 @@ var dcID = os.Getenv("DAEMON_ID")
 var isDaemon = os.Getenv("IS_DAEMON")
 var hubLogMgrAddr string
 
+var httpClient *http.Client
+
+const (
+	TIMEOUT = 30 * time.Second
+	esURL   = "http://elasticsearch:9200"
+)
+
 func init() {
 	flag.Set("logtostderr", "true")
 	flag.Set("v", "3")
 	flag.Parse()
+	httpClient = &http.Client{
+		Timeout:   TIMEOUT,
+		Transport: &http.Transport{},
+	}
 }
 
 func main() {
@@ -44,13 +55,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create es client, %v", err)
 	}
-	//prometheus metric
+	//prometheus collector
 	go func(h *handler.LogMgrHandler) {
-		log.Println(">>>>>>>>>>>    Start prometheus metric monitor    >>>>>>>>>>>")
+		log.Println(">>>>>>>>>>>    Start prometheus collector monitor    >>>>>>>>>>>")
 		router := mux.NewRouter()
-		collector := metric.NewLogMgrCollector(h)
-		prometheus.MustRegister(collector)
-		router.Handle("/metrics", promhttp.Handler())
+		prometheus.MustRegister(collector.NewLogMgrCollector(h))
+		prometheus.MustRegister(collector.NewClusterHealth(httpClient, esURL))
+		prometheus.MustRegister(collector.NewIndices(httpClient, esURL))
+		prometheus.MustRegister(collector.NewNodes(httpClient, esURL))
+		prometheus.MustRegister(collector.NewSnapshots(httpClient, esURL))
+		router.Handle("/metric", promhttp.Handler())
 		log.Fatal(http.ListenAndServe(METRIC_PORT, router))
 	}(server)
 
