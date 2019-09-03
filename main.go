@@ -36,7 +36,7 @@ var httpClient *http.Client
 
 const (
 	TIMEOUT = 30 * time.Second
-	esURL   = "http://elasticsearch:9200"
+	esURL   = "http://elasticsearch.logging:9200"
 )
 
 func init() {
