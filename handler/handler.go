@@ -12,6 +12,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/olivere/elastic"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -67,6 +68,8 @@ const (
 	TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
 	RANGE_FIELD = "@timestamp"
 	CTX_DC_ID   = "ankr_dc_id"
+
+	NAMESPACE_LOGMGR = "logmgr"
 )
 
 var (
@@ -80,6 +83,8 @@ type LogMgrHandler struct {
 	client *elastic.Client
 	url    string
 	query  elastic.Query
+
+	up prometheus.Gauge
 
 	dcID string
 }
@@ -122,6 +127,10 @@ func NewLogMgrHandler(dcID string, options ...HandlerOptionFunc) (*LogMgrHandler
 		return nil, err
 	}
 	es.client = c
+	es.up = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: prometheus.BuildFQName(NAMESPACE_LOGMGR, "elasticsearch", "up"),
+		Help: "logmgr can connect to ElasticSearch, work well",
+	})
 	return es, nil
 }
 
@@ -495,4 +504,16 @@ func (s *LogMgrHandler) ListLogByPodName(ctx context.Context, req *pb.LogPodRequ
 	}
 	glog.V(3).Infof("listlogbypodname [SUCCEED]: handled log items => %d, last search end => %d", len(resp.LogItems), resp.LastSearchEnd)
 	return resp, nil
+}
+
+func (s *LogMgrHandler) Describe(ch chan<- *prometheus.Desc) {
+	ch <- s.up.Desc()
+}
+
+func (s *LogMgrHandler) Collect(ch chan<- prometheus.Metric) {
+	s.up.Set(1)
+	if !s.ok() {
+		s.up.Set(0)
+	}
+	ch <- s.up
 }

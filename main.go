@@ -36,6 +36,7 @@ var httpClient *http.Client
 
 const (
 	TIMEOUT = 30 * time.Second
+	VERSION = "v1.0.0"
 	esURL   = "http://elasticsearch.logging:9200"
 )
 
@@ -51,15 +52,18 @@ func init() {
 
 func main() {
 	log.Println(">>>>>>>>>>>>>    DCCN LogMgr Start    >>>>>>>>>>>>>>>>>")
+	log.Println(">>>>>>>>>>>>>    Version:", VERSION, "   >>>>>>>>>>>>>>>>>")
 	server, err := handler.NewLogMgrHandler(dcID)
 	if err != nil {
 		log.Fatalf("failed to create es client, %v", err)
 	}
+
 	//prometheus collector
 	go func(h *handler.LogMgrHandler) {
 		log.Println(">>>>>>>>>>>    Start prometheus collector monitor    >>>>>>>>>>>")
 		router := mux.NewRouter()
-		prometheus.MustRegister(collector.NewLogMgrCollector(h))
+		//prometheus.MustRegister(collector.NewLogMgrCollector(h))
+		prometheus.MustRegister(server)
 		prometheus.MustRegister(collector.NewClusterHealth(httpClient, esURL))
 		prometheus.MustRegister(collector.NewIndices(httpClient, esURL))
 		prometheus.MustRegister(collector.NewNodes(httpClient, esURL))

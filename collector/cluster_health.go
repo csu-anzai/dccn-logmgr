@@ -170,6 +170,7 @@ func (c *ClusterHealth) fetchAndDecodeClusterHealth() (clusterHealthResponse, er
 func (c *ClusterHealth) Collect(ch chan<- prometheus.Metric) {
 	var err error
 
+	glog.V(3).Infof("collect cluster health data, esURL => %s", c.url)
 	clusterHealthResp, err := c.fetchAndDecodeClusterHealth()
 	if err != nil {
 		c.up.Set(0)
