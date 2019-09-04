@@ -85,6 +85,10 @@ func NewIndices(client *http.Client, url string) *Indices {
 					"Count of documents with only primary shards",
 					indexLabels.keys(), nil,
 				),
+				Value: func(indexStats IndexStatsIndexResponse) float64 {
+					return float64(indexStats.Primaries.Docs.Count)
+				},
+				Labels: indexLabels,
 			},
 			{
 				Type: prometheus.GaugeValue,
@@ -480,7 +484,7 @@ func (i *Indices) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 	for indexName, indexStats := range indexStatsResp.Indices {
-		glog.V(3).Infof("collect: index => %s, indexStats => %+v", indexName, indexStats)
+		//glog.V(3).Infof("collect: index => %s, indexStats => %+v", indexName, indexStats)
 		for _, metric := range i.indexMetrics {
 			ch <- prometheus.MustNewConstMetric(
 				metric.Desc,
