@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"path"
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
@@ -142,7 +141,7 @@ func (c *ClusterHealth) Describe(ch chan<- *prometheus.Desc) {
 func (c *ClusterHealth) fetchAndDecodeClusterHealth() (clusterHealthResponse, error) {
 	var chr clusterHealthResponse
 
-	res, err := c.client.Get(path.Join(c.url, "/_cluster/health"))
+	res, err := c.client.Get(c.url + "/_cluster/health")
 	if err != nil {
 		glog.Errorf("failed to get cluster health, %v", err)
 		return chr, ErrFailedClusterHealth

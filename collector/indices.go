@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"path"
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
@@ -440,7 +439,7 @@ func (i *Indices) Describe(ch chan<- *prometheus.Desc) {
 func (i *Indices) fetchAndDecodeIndexStats() (indexStatsResponse, error) {
 	var isr indexStatsResponse
 
-	res, err := i.client.Get(path.Join(i.url, "/_all/_stats"))
+	res, err := i.client.Get(i.url + "/_all/_stats")
 	if err != nil {
 		glog.Errorf("failed to get index stats, %v", err)
 		return isr, ErrFailedIndexStats

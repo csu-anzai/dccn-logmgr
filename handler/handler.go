@@ -57,7 +57,7 @@ Handle flow:
 */
 
 const (
-	ES_URL         = "http://elasticsearch.logging:9200"
+	//ES_URL         = "http://elasticsearch.logging:9200"
 	PER_FETCH_SIZE = 500
 	CTX_REQID      = "ankr_req_id"
 	TERM_APP       = "kubernetes.labels.release.keyword"
@@ -117,8 +117,8 @@ func handleSearchResult(result *elastic.SearchResult, typ reflect.Type) []*pb.Lo
 	return log_items
 }
 
-func NewLogMgrHandler(dcID string, options ...HandlerOptionFunc) (*LogMgrHandler, error) {
-	es := &LogMgrHandler{url: ES_URL, dcID: dcID}
+func NewLogMgrHandler(esURL, dcID string, options ...HandlerOptionFunc) (*LogMgrHandler, error) {
+	es := &LogMgrHandler{url: esURL, dcID: dcID}
 	for _, opt := range options {
 		opt(es)
 	}

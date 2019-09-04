@@ -3,7 +3,6 @@ package collector
 import (
 	"encoding/json"
 	"net/http"
-	"path"
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
@@ -172,10 +171,10 @@ func (s *Snapshots) Describe(ch chan<- *prometheus.Desc) {
 	ch <- s.up.Desc()
 }
 
-func (s *Snapshots) getRepositorySettings(url string, data interface{}) error {
+func (s *Snapshots) getRepositoryInfo(url string, data interface{}) error {
 	res, err := s.client.Get(url)
 	if err != nil {
-		glog.Errorf("failed to get repository settings, %v", err)
+		glog.Errorf("failed to get repository infomation, %v", err)
 		return err
 	}
 
@@ -191,7 +190,7 @@ func (s *Snapshots) getRepositorySettings(url string, data interface{}) error {
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(data); err != nil {
-		glog.Errorf("failed to decode repository settings, %v", err)
+		glog.Errorf("failed to decode repository infomation, %v", err)
 		return err
 	}
 	return nil
@@ -202,14 +201,14 @@ func (s *Snapshots) fetchAndDecodeSnapshotsStats() (map[string]SnapshotStatsResp
 
 	var srr SnapshotRepositoriesResponse
 
-	err := s.getRepositorySettings(path.Join(s.url, "/_snapshot"), &srr)
+	err := s.getRepositoryInfo(s.url+"/_snapshot", &srr)
 	if err != nil {
 		return nil, err
 	}
 
 	for repo := range srr {
 		var ssr SnapshotStatsResponse
-		err := s.getRepositorySettings(path.Join(s.url, "/_snapshot", repo, "_all"), &ssr)
+		err := s.getRepositoryInfo(s.url+"/_snapshot"+repo+"/_all", &ssr)
 		if err != nil {
 			continue
 		}

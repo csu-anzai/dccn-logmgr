@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"path"
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
@@ -826,7 +825,7 @@ func (c *Nodes) Describe(ch chan<- *prometheus.Desc) {
 func (c *Nodes) fetchAndDecodeNodeStats() (nodeStatsResponse, error) {
 	var nsr nodeStatsResponse
 
-	res, err := c.client.Get(path.Join(c.url, "/_nodes/stats"))
+	res, err := c.client.Get(c.url + "/_nodes/stats")
 	if err != nil {
 		glog.Errorf("failed to get node stats, %v", err)
 		return nsr, ErrFailedNodeStats

@@ -28,11 +28,10 @@ const (
 	METRIC_PORT = ":9090"
 )
 
-var dcID = os.Getenv("DAEMON_ID")
-var isDaemon = os.Getenv("IS_DAEMON")
-var hubLogMgrAddr string
-
-var httpClient *http.Client
+var (
+	dcID, isDaemon, hubLogMgrAddr string
+	httpClient                    *http.Client
+)
 
 const (
 	TIMEOUT = 30 * time.Second
@@ -44,6 +43,8 @@ func init() {
 	flag.Set("logtostderr", "true")
 	flag.Set("v", "3")
 	flag.Parse()
+	dcID = os.Getenv("DAEMON_ID")
+	isDaemon = os.Getenv("IS_DAEMON")
 	httpClient = &http.Client{
 		Timeout:   TIMEOUT,
 		Transport: &http.Transport{},
@@ -52,8 +53,8 @@ func init() {
 
 func main() {
 	log.Println(">>>>>>>>>>>>>    DCCN LogMgr Start    >>>>>>>>>>>>>>>>>")
-	log.Println(">>>>>>>>>>>>>    Version:", VERSION, "   >>>>>>>>>>>>>>>>>")
-	server, err := handler.NewLogMgrHandler(dcID)
+	log.Println(">>>>>>>>>>>>>    Version: ", VERSION, "   >>>>>>>>>>>>>>>>>")
+	server, err := handler.NewLogMgrHandler(esURL, dcID)
 	if err != nil {
 		log.Fatalf("failed to create es client, %v", err)
 	}
@@ -62,7 +63,6 @@ func main() {
 	go func(h *handler.LogMgrHandler) {
 		log.Println(">>>>>>>>>>>    Start prometheus collector monitor    >>>>>>>>>>>")
 		router := mux.NewRouter()
-		//prometheus.MustRegister(collector.NewLogMgrCollector(h))
 		prometheus.MustRegister(server)
 		prometheus.MustRegister(collector.NewClusterHealth(httpClient, esURL))
 		prometheus.MustRegister(collector.NewIndices(httpClient, esURL))
@@ -114,7 +114,7 @@ func main() {
 				}
 				return err
 			})
-			log.Println("connectable clients:", keys)
+			glog.V(5).Infof("connectable clients: %s", strings.Join(keys, ","))
 		}
 	}()
 
