@@ -3,7 +3,6 @@ package collector
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/golang/glog"
@@ -33,18 +32,12 @@ func GetClusterInfo(url string) (*ClusterInfoResponse, error) {
 
 	if res.StatusCode != http.StatusOK {
 		return nil, ErrHttpStatus
-	} else {
-		//body, err := ioutil.ReadAll(res.Body)
-		//if err != nil {
-		//	glog.Errorf("failed to read cluster info body, %v", err)
-		//	return nil, ErrFailedClusterInfoBody
-		//}
-		//glog.V(3).Infof("read cluster info body: %s", string(body))
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(&clusterInfo); err != nil {
 		glog.Errorf("failed to decode cluster info, %v", err)
 		return nil, err
 	}
+	glog.V(3).Infof("read cluster info body: %v", clusterInfo)
 	return &clusterInfo, nil
 }
