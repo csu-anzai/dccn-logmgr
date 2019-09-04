@@ -12,11 +12,11 @@ var (
 	ErrFailedClusterInfo = errors.New("failed to get cluster info")
 )
 
-func GetClusterInfo() (*ClusterInfoResponse, error) {
+func GetClusterInfo(url string) (*ClusterInfoResponse, error) {
 	var clusterInfo ClusterInfoResponse
 
 	client := http.Client{}
-	res, err := client.Get("/")
+	res, err := client.Get(url)
 	if err != nil {
 		glog.Errorf("failed to get cluster info, %v", err)
 		return nil, ErrFailedClusterInfo

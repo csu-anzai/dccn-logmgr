@@ -475,7 +475,7 @@ func (i *Indices) Collect(ch chan<- prometheus.Metric) {
 
 	i.up.Set(1)
 	//index stats
-	clusterInfo, err := GetClusterInfo()
+	clusterInfo, err := GetClusterInfo(i.url)
 	if err != nil {
 		return
 	}

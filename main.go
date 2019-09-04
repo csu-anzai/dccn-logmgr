@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"net"
@@ -26,11 +27,13 @@ const (
 	PORT        = ":50051"
 	RELAY_PORT  = ":50052"
 	METRIC_PORT = ":9090"
+	DEBUG_PORT  = ":8080"
 )
 
 var (
 	dcID, isDaemon, hubLogMgrAddr string
 	httpClient                    *http.Client
+	isDebug                       bool
 )
 
 const (
@@ -51,9 +54,39 @@ func init() {
 	}
 }
 
+func debugHandler(w http.ResponseWriter, req *http.Request) {
+	data := struct {
+		Acknowledge bool `json:"acknowledge"`
+		IsDebug     bool `json:"is_debug"`
+	}{
+		Acknowledge: false,
+		IsDebug:     false,
+	}
+
+	res, _ := json.Marshal(data)
+	if err := req.ParseForm(); err != nil {
+		w.Write([]byte(res))
+		return
+	}
+
+	switch req.Form.Get("v") {
+	case "1":
+		isDebug = true
+	case "0":
+		isDebug = false
+	default:
+		isDebug = true
+	}
+
+	data.Acknowledge = true
+	data.IsDebug = isDebug
+	res, _ = json.Marshal(data)
+	w.Write([]byte(res))
+}
+
 func main() {
 	log.Println(">>>>>>>>>>>>>    DCCN LogMgr Start    >>>>>>>>>>>>>>>>>")
-	log.Println(">>>>>>>>>>>>>    Version: ", VERSION, "   >>>>>>>>>>>>>>>>>")
+	log.Println(">>>>>>>>>>>>>    Version: ", VERSION, "    >>>>>>>>>>>>>>>>>")
 	server, err := handler.NewLogMgrHandler(esURL, dcID)
 	if err != nil {
 		log.Fatalf("failed to create es client, %v", err)
@@ -61,7 +94,7 @@ func main() {
 
 	//prometheus collector
 	go func(h *handler.LogMgrHandler) {
-		log.Println(">>>>>>>>>>>    Start prometheus collector monitor    >>>>>>>>>>>")
+		log.Println(">>>>>>>>>>>>>    Start prometheus collector monitor    >>>>>>>>>>>")
 		router := mux.NewRouter()
 		prometheus.MustRegister(server)
 		prometheus.MustRegister(collector.NewClusterHealth(httpClient, esURL))
@@ -72,6 +105,12 @@ func main() {
 		log.Fatal(http.ListenAndServe(METRIC_PORT, router))
 	}(server)
 
+	//glog controller
+	go func() {
+		log.Println(">>>>>>>>>>>>>    Glog log level controller    >>>>>>>>>>>>>")
+		http.HandleFunc("/debug", debugHandler)
+		log.Fatal(http.ListenAndServe(DEBUG_PORT, nil))
+	}()
 	server.Ping()
 
 	// in daemon
@@ -114,7 +153,9 @@ func main() {
 				}
 				return err
 			})
-			glog.V(5).Infof("connectable clients: %s", strings.Join(keys, ","))
+			if isDebug {
+				glog.Infof("connectable clients: %s", strings.Join(keys, ","))
+			}
 		}
 	}()
 
