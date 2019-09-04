@@ -24,14 +24,6 @@ func GetClusterInfo(url string) (*ClusterInfoResponse, error) {
 		return nil, ErrFailedClusterInfo
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		glog.Errorf("failed to read cluster info body, %v", err)
-		return nil, ErrFailedClusterInfoBody
-	}
-
-	glog.V(3).Infof("read cluster info body: %s", string(body))
-
 	defer func() {
 		err = res.Body.Close()
 		if err != nil {
@@ -41,6 +33,13 @@ func GetClusterInfo(url string) (*ClusterInfoResponse, error) {
 
 	if res.StatusCode != http.StatusOK {
 		return nil, ErrHttpStatus
+	} else {
+		//body, err := ioutil.ReadAll(res.Body)
+		//if err != nil {
+		//	glog.Errorf("failed to read cluster info body, %v", err)
+		//	return nil, ErrFailedClusterInfoBody
+		//}
+		//glog.V(3).Infof("read cluster info body: %s", string(body))
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(&clusterInfo); err != nil {
