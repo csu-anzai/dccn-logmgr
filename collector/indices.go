@@ -480,6 +480,7 @@ func (i *Indices) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 	for indexName, indexStats := range indexStatsResp.Indices {
+		glog.V(3).Infof("collect: index => %s, indexStats => %+v", indexName, indexStats)
 		for _, metric := range i.indexMetrics {
 			ch <- prometheus.MustNewConstMetric(
 				metric.Desc,
