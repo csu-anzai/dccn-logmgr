@@ -105,9 +105,9 @@ func main() {
 		log.Fatal(http.ListenAndServe(METRIC_PORT, router))
 	}(server)
 
-	//glog controller
+	//debug
 	go func() {
-		log.Println(">>>>>>>>>>>>>    Glog log level controller    >>>>>>>>>>>>>")
+		log.Println(">>>>>>>>>>>>>      Debug      >>>>>>>>>>>>>")
 		http.HandleFunc("/debug", debugHandler)
 		log.Fatal(http.ListenAndServe(DEBUG_PORT, nil))
 	}()
