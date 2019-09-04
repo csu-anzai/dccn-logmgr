@@ -3,13 +3,15 @@ package collector
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/golang/glog"
 )
 
 var (
-	ErrFailedClusterInfo = errors.New("failed to get cluster info")
+	ErrFailedClusterInfo     = errors.New("failed to get cluster info")
+	ErrFailedClusterInfoBody = errors.New("failed to read cluster info body")
 )
 
 func GetClusterInfo(url string) (*ClusterInfoResponse, error) {
@@ -21,6 +23,14 @@ func GetClusterInfo(url string) (*ClusterInfoResponse, error) {
 		glog.Errorf("failed to get cluster info, %v", err)
 		return nil, ErrFailedClusterInfo
 	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		glog.Errorf("failed to read cluster info body, %v", err)
+		return nil, ErrFailedClusterInfoBody
+	}
+
+	glog.V(3).Infof("read cluster info body: %s", string(body))
 
 	defer func() {
 		err = res.Body.Close()
